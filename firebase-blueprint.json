@@ -1,0 +1,172 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Authenticated user profile",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "format": "email", "maxLength": 256 },
+        "displayName": { "type": "string", "maxLength": 128 },
+        "photoURL": { "type": "string", "maxLength": 1024 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "email"]
+    },
+    "Lead": {
+      "title": "Lead",
+      "description": "A researched and qualified business lead",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "leadId": { "type": "string", "maxLength": 128 },
+        "companyName": { "type": "string", "maxLength": 256 },
+        "canonicalDomain": { "type": "string", "maxLength": 256 },
+        "normalizedPhone": { "type": "string", "maxLength": 64 },
+        "duplicateKey": { "type": "string", "maxLength": 256 },
+        "contactFullName": { "type": "string", "maxLength": 128 },
+        "jobTitle": { "type": "string", "maxLength": 128 },
+        "businessEmail": { "type": "string", "maxLength": 256 },
+        "emailStatus": { "type": "string", "enum": ["Verified/Public", "Public but Unverified", "Not Found", "Invalid/Rejected", "Not Verified"] },
+        "phoneNumber": { "type": "string", "maxLength": 64 },
+        "phoneStatus": { "type": "string", "enum": ["Verified/Public", "Public", "Not Found", "Invalid/Rejected", "Not Verified"] },
+        "whatsAppStatus": { "type": "string", "enum": ["Yes — Evidence", "No — Evidence", "Unknown"] },
+        "website": { "type": "string", "maxLength": 512 },
+        "websiteStatus": { "type": "string", "enum": ["Active", "Active but Weak", "Outdated Indicators", "Broken", "Unreachable", "No Website Found", "Unknown"] },
+        "facebook": { "type": "string", "maxLength": 512 },
+        "instagram": { "type": "string", "maxLength": 512 },
+        "linkedin": { "type": "string", "maxLength": 512 },
+        "city": { "type": "string", "maxLength": 128 },
+        "region": { "type": "string", "maxLength": 128 },
+        "fullAddress": { "type": "string", "maxLength": 512 },
+        "country": { "type": "string", "maxLength": 128 },
+        "industry": { "type": "string", "maxLength": 128 },
+        "googleRating": { "type": "string", "maxLength": 32 },
+        "googleReviews": { "type": "string", "maxLength": 32 },
+        "businessStatus": { "type": "string", "enum": ["Active", "Temporarily Closed", "Closed", "Unknown"] },
+        "recentNeedSignal": { "type": "string", "maxLength": 256 },
+        "needEvidence": { "type": "string", "maxLength": 1024 },
+        "businessProblem": { "type": "string", "maxLength": 1024 },
+        "salesOpportunity": { "type": "string", "maxLength": 256 },
+        "signalDate": { "type": "string", "maxLength": 64 },
+        "source": { "type": "string", "maxLength": 512 },
+        "researchDate": { "type": "string", "maxLength": 64 },
+        "leadStrength": { "type": "string", "enum": ["A", "B"] },
+        "leadScore": { "type": "number" },
+        "scoreFactors": { "type": "object" },
+        "runId": { "type": "string", "maxLength": 128 },
+        "contacted": { "type": "boolean" },
+        "notes": { "type": "string", "maxLength": 2048 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "companyName", "country", "leadStrength", "leadScore"]
+    },
+    "LeadHistory": {
+      "title": "LeadHistory",
+      "description": "Historical record for deduplication and contact suppression",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "duplicateKey": { "type": "string", "maxLength": 256 },
+        "companyName": { "type": "string", "maxLength": 256 },
+        "canonicalDomain": { "type": "string", "maxLength": 256 },
+        "normalizedPhone": { "type": "string", "maxLength": 64 },
+        "country": { "type": "string", "maxLength": 128 },
+        "niche": { "type": "string", "maxLength": 128 },
+        "firstDiscoveredAt": { "type": "string", "format": "date-time" },
+        "lastResearchedAt": { "type": "string", "format": "date-time" },
+        "lastContactedAt": { "type": "string", "maxLength": 64 },
+        "status": { "type": "string", "enum": ["Discovered", "Researching", "Qualified", "Exported", "Contacted", "Rejected", "Suppressed", "Archived"] },
+        "runId": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["userId", "duplicateKey", "companyName"]
+    },
+    "ResearchRun": {
+      "title": "ResearchRun",
+      "description": "Log of a research job execution",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "runId": { "type": "string", "maxLength": 128 },
+        "country": { "type": "string", "maxLength": 128 },
+        "niche": { "type": "string", "maxLength": 128 },
+        "location": { "type": "string", "maxLength": 128 },
+        "requestedCount": { "type": "number" },
+        "candidatesFound": { "type": "number" },
+        "duplicatesRemoved": { "type": "number" },
+        "rejectedCount": { "type": "number" },
+        "researchCompleted": { "type": "number" },
+        "qualifiedCount": { "type": "number" },
+        "finalCount": { "type": "number" },
+        "shortfall": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "planning", "discovering", "researching", "qualifying", "completed", "partial", "failed"] },
+        "stage": { "type": "string", "maxLength": 128 },
+        "progress": { "type": "number" },
+        "durationMs": { "type": "number" },
+        "errors": { "type": "array" },
+        "sourcesUsed": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "runId", "country", "niche", "requestedCount"]
+    },
+    "Evidence": {
+      "title": "Evidence",
+      "description": "Evidence item backing a lead claim",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "leadId": { "type": "string", "maxLength": 128 },
+        "claimSupported": { "type": "string", "maxLength": 512 },
+        "evidenceUrl": { "type": "string", "maxLength": 1024 },
+        "evidenceSource": { "type": "string", "maxLength": 256 },
+        "evidenceTitle": { "type": "string", "maxLength": 256 },
+        "evidenceDate": { "type": "string", "maxLength": 64 },
+        "evidenceSummary": { "type": "string", "maxLength": 1024 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "leadId", "claimSupported"]
+    },
+    "Suppression": {
+      "title": "Suppression",
+      "description": "Suppressed domain, phone, or company",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "enum": ["domain", "phone", "company"] },
+        "value": { "type": "string", "maxLength": 256 },
+        "reason": { "type": "string", "maxLength": 512 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "type", "value"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles"
+    },
+    "/leads/{leadId}": {
+      "schema": { "$ref": "#/entities/Lead" },
+      "description": "Researched business leads"
+    },
+    "/leadHistory/{historyId}": {
+      "schema": { "$ref": "#/entities/LeadHistory" },
+      "description": "Lead discovery and contact history for deduplication"
+    },
+    "/researchRuns/{runId}": {
+      "schema": { "$ref": "#/entities/ResearchRun" },
+      "description": "Research run job status and logs"
+    },
+    "/evidence/{evidenceId}": {
+      "schema": { "$ref": "#/entities/Evidence" },
+      "description": "Evidence records supporting lead claims"
+    },
+    "/suppression/{suppressionId}": {
+      "schema": { "$ref": "#/entities/Suppression" },
+      "description": "Suppression entries for excluded businesses"
+    }
+  }
+}

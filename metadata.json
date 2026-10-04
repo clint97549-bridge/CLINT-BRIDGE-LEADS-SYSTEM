@@ -1,0 +1,6 @@
+{
+  "name": "LeadPulse AI - B2B Lead Research & Intelligence Engine",
+  "description": "Production-grade B2B lead discovery, business verification, grounded website auditing, contact intelligence, and export system with Firestore persistence.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
