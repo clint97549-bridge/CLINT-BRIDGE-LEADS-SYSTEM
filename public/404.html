@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>LeadPulse AI</title>
+    <script type="text/javascript">
+      // Single Page Application redirect script for GitHub Pages
+      // Stores requested path and redirects to root index.html
+      var pathSegmentsToKeep = 1;
+      var l = window.location;
+      var pathname = l.pathname;
+      var segments = pathname.split('/').filter(Boolean);
+      // Redirect to index.html with route preserved
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        (segments.length > 0 ? '/' + segments[0] : '') + '/?' +
+        (l.search ? '&' + l.search.slice(1) : '') +
+        l.hash
+      );
+    </script>
+  </head>
+  <body>
+    <p>Redirecting to LeadPulse AI application...</p>
+  </body>
+</html>

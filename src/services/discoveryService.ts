@@ -26,7 +26,7 @@ export async function discoverCandidatesWithGrounding(
   targetCount: number,
   onProgress?: (foundCount: number, currentQuery: string) => void
 ): Promise<DiscoveryServiceResult> {
-  const provider = getDiscoveryProvider();
+  const provider = getDiscoveryProvider(plan.niche);
   const candidates: CandidateBusiness[] = [];
   const sourcesSet = new Set<string>();
   let isSafeMode = false;
@@ -90,8 +90,12 @@ export async function discoverCandidatesWithGrounding(
         }
       }
 
-      // Throttling delay
-      await new Promise((r) => setTimeout(r, 600));
+      if (candidates.length >= targetCount) {
+        break;
+      }
+
+      // Respect API quota limits with adaptive throttling delay
+      await new Promise((r) => setTimeout(r, 1200));
     } catch (err: unknown) {
       console.error(`[DiscoveryService] Error during search query "${queryPlan.query}":`, err);
       isSafeMode = true;

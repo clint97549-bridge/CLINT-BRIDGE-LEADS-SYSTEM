@@ -31,7 +31,7 @@ export interface VerifiedWebsiteData {
   phonesFound: { phone: string; sourceUrl: string }[];
   addressesFound: { address: string; sourceUrl: string }[];
   decisionMakersFound: { name: string; title: string; sourceUrl: string }[];
-  socialLinks: { facebook?: string; instagram?: string; linkedin?: string };
+  socialLinks: { facebook?: string; instagram?: string; linkedin?: string; whatsapp?: string };
   hasContactPage: boolean;
   contactPageUrl?: string;
   hasContactForm: boolean;
@@ -42,6 +42,8 @@ export interface VerifiedWebsiteData {
   outdatedCopyrightYear?: number;
   observableProblems: ObservableDigitalProblem[];
   retrievedAt: string;
+  ecommerceStorefrontDetected?: boolean;
+  bookingWorkflowDetected?: boolean;
   evidenceItems: {
     claim: string;
     url: string;
@@ -56,7 +58,18 @@ const DISALLOWED_EMAIL_DOMAINS = new Set([
   'email.com',
   'sentry.io',
   'wixpress.com',
+  'wix.com',
   'wordpress.org',
+  'wordpress.com',
+  'shopify.com',
+  'myshopify.com',
+  'squarespace.com',
+  'weebly.com',
+  'godaddy.com',
+  'hostinger.com',
+  'namecheap.com',
+  'cloudflare.com',
+  'webador.com',
   'w3.org',
   'schema.org',
 ]);
@@ -180,14 +193,47 @@ export function extractPhonesFromHtml(html: string, pageUrl: string): { phone: s
     }
   }
 
+  // 3. Pakistan phone text patterns (e.g. 03xx-xxxxxxx, 03xxxxxxxxx, +92-3xx-xxxxxxx, 021-xxxxxxxx, 042-xxxxxxxx, 051-xxxxxxxx)
+  const pkPhoneRegex = /(?:\+92|0092|92|0)(?:3\d{2}[-\s]?\d{7}|[2-9]\d{1,2}[-\s]?\d{6,8})\b/g;
+  while ((match = pkPhoneRegex.exec(html)) !== null) {
+    const phone = match[0].trim();
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length >= 10 && digits.length <= 13) {
+      if (!found.has(phone)) {
+        found.add(phone);
+        results.push({ phone, sourceUrl: pageUrl });
+      }
+    }
+  }
+
+  // 4. WhatsApp direct click-to-chat links (wa.me/923..., api.whatsapp.com/send?phone=923...)
+  const waRegex = /(?:wa\.me|api\.whatsapp\.com\/send\?phone=)\/?([+0-9]{9,16})/gi;
+  while ((match = waRegex.exec(html)) !== null) {
+    const rawWa = match[1].replace(/\D/g, '');
+    if (rawWa.length >= 10 && !found.has(rawWa)) {
+      found.add(rawWa);
+      results.push({ phone: `+${rawWa}`, sourceUrl: pageUrl });
+    }
+  }
+
+  // 5. North America / International standard format
+  const usPhoneRegex = /(?:\+?1[-.\s]?)?\(?[2-9]\d{2}\)?[-.\s]?[2-9]\d{2}[-.\s]?\d{4}\b/g;
+  while ((match = usPhoneRegex.exec(html)) !== null) {
+    const phone = match[0].trim();
+    if (!found.has(phone)) {
+      found.add(phone);
+      results.push({ phone, sourceUrl: pageUrl });
+    }
+  }
+
   return results;
 }
 
 /**
  * Extracts social profile links from HTML
  */
-export function extractSocialProfiles(html: string): { facebook?: string; instagram?: string; linkedin?: string } {
-  const result: { facebook?: string; instagram?: string; linkedin?: string } = {};
+export function extractSocialProfiles(html: string): { facebook?: string; instagram?: string; linkedin?: string; whatsapp?: string } {
+  const result: { facebook?: string; instagram?: string; linkedin?: string; whatsapp?: string } = {};
 
   const fbMatch = html.match(/href=["'](https?:\/\/(?:www\.)?facebook\.com\/(?:pages\/)?[a-zA-Z0-9._-]+)\/?["']/i);
   if (fbMatch && !fbMatch[1].includes('sharer') && !fbMatch[1].includes('tr?id=')) {
@@ -204,13 +250,71 @@ export function extractSocialProfiles(html: string): { facebook?: string; instag
     result.linkedin = liMatch[1];
   }
 
+  const waMatch = html.match(/href=["'](https?:\/\/(?:wa\.me|api\.whatsapp\.com\/send\?phone=)[^"'\s]+)["']/i);
+  if (waMatch) {
+    result.whatsapp = waMatch[1];
+  }
+
   return result;
 }
 
 /**
- * Safely fetches a web page with timeout and standard browser headers.
+ * SSRF Safety Guard:
+ * Blocks attempts to probe localhost, cloud metadata, private IP ranges, and internal services.
  */
-async function safeFetchHtml(url: string, timeoutMs = 5000): Promise<{ ok: boolean; status: number; html: string; finalUrl: string } | null> {
+export function isSafeUrl(rawUrl: string): boolean {
+  try {
+    const parsed = new URL(rawUrl);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return false;
+    }
+
+    const hostname = parsed.hostname.toLowerCase();
+
+    // Block localhost and loopbacks
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname === '0.0.0.0') {
+      return false;
+    }
+
+    // Block cloud metadata endpoints
+    if (hostname === '169.254.169.254' || hostname === 'metadata.google.internal' || hostname.endsWith('.metadata.google.internal')) {
+      return false;
+    }
+
+    // Block internal suffixes
+    if (hostname.endsWith('.internal') || hostname.endsWith('.local') || hostname.endsWith('.onion')) {
+      return false;
+    }
+
+    // Check for IPv4 private subnets: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8
+    const ipv4Match = hostname.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+    if (ipv4Match) {
+      const b0 = parseInt(ipv4Match[1], 10);
+      const b1 = parseInt(ipv4Match[2], 10);
+      if (b0 === 10) return false;
+      if (b0 === 127) return false;
+      if (b0 === 172 && b1 >= 16 && b1 <= 31) return false;
+      if (b0 === 192 && b1 === 168) return false;
+      if (b0 === 169 && b1 === 254) return false;
+      if (b0 === 0) return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const MAX_HTML_BYTES = 2 * 1024 * 1024; // 2 MB limit
+
+/**
+ * Safely fetches a web page with timeout, SSRF protection, size limit, and standard browser headers.
+ */
+export async function safeFetchHtml(url: string, timeoutMs = 5000): Promise<{ ok: boolean; status: number; html: string; finalUrl: string } | null> {
+  if (!isSafeUrl(url)) {
+    return null;
+  }
+
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -234,9 +338,11 @@ async function safeFetchHtml(url: string, timeoutMs = 5000): Promise<{ ok: boole
       return { ok: response.ok, status: response.status, html: '', finalUrl: response.url };
     }
 
-    const html = await response.text();
+    // Limit read size to prevent memory exhaustion
+    const text = await response.text();
+    const html = text.length > MAX_HTML_BYTES ? text.substring(0, MAX_HTML_BYTES) : text;
     return { ok: response.ok, status: response.status, html, finalUrl: response.url };
-  } catch (err) {
+  } catch {
     return null;
   }
 }
@@ -269,12 +375,28 @@ export async function verifyAndAuditWebsite(rawWebsiteUrl: string): Promise<Veri
     evidenceItems: [],
   };
 
-  if (!normalizedUrl) {
+  if (!normalizedUrl || !isSafeUrl(normalizedUrl)) {
     return emptyResult;
   }
 
   const startTime = Date.now();
-  const homepageFetch = await safeFetchHtml(normalizedUrl, 6000);
+  let homepageFetch = await safeFetchHtml(normalizedUrl, 3500);
+
+  // Retry check before declaring website broken/unreachable
+  if (!homepageFetch || !homepageFetch.ok) {
+    // Try alternate protocol if https failed (many local Pakistani domains only run http or vice-versa)
+    const alternateUrl = normalizedUrl.startsWith('https://')
+      ? normalizedUrl.replace(/^https:\/\//, 'http://')
+      : normalizedUrl.replace(/^http:\/\//, 'https://');
+    
+    if (isSafeUrl(alternateUrl)) {
+      const retryFetch = await safeFetchHtml(alternateUrl, 3000);
+      if (retryFetch && retryFetch.ok) {
+        homepageFetch = retryFetch;
+      }
+    }
+  }
+
   const responseTimeMs = Date.now() - startTime;
 
   if (!homepageFetch || !homepageFetch.ok || homepageFetch.status >= 400) {
@@ -368,7 +490,7 @@ export async function verifyAndAuditWebsite(rawWebsiteUrl: string): Promise<Veri
 
   if (subpages.contactUrl) {
     contactPageUrl = subpages.contactUrl;
-    const contactFetch = await safeFetchHtml(subpages.contactUrl, 4000);
+    const contactFetch = await safeFetchHtml(subpages.contactUrl, 2500);
     if (contactFetch && contactFetch.ok) {
       hasContactPage = true;
       // Extract additional contacts from contact page
@@ -463,6 +585,31 @@ export async function verifyAndAuditWebsite(rawWebsiteUrl: string): Promise<Veri
     });
   }
 
+  // Problem G: E-Commerce Storefront Specific Audit (Section B & E)
+  const hasEcommerceSignals =
+    /(?:add to cart|add-to-cart|checkout|shopping cart|shopping bag|shopify|woocommerce|magento|cash on delivery|cod available|buy now|order online|pkr\s*\d|rs\.\s*\d)/i.test(
+      html
+    );
+  const hasOnlineCartCheckout =
+    /href=["'][^"']*(?:cart|checkout|basket)/i.test(html) ||
+    /<(?:form|button|a)[^>]+(?:cart|checkout|add-to-cart)/i.test(html);
+
+  if (hasEcommerceSignals && !hasOnlineCartCheckout) {
+    observableProblems.push({
+      problem: 'E-Commerce Catalog Without Automated Cart Checkout (Manual Order Only)',
+      evidence:
+        'Product prices or shopping indicators detected, but HTML markup lacks an interactive shopping cart or checkout workflow.',
+      sourceUrl: finalUrl,
+      retrievedAt,
+    });
+  }
+
+  // Problem H: Service Booking / Admission Workflow Audit
+  const hasBookingSignals =
+    /(?:book now|reservation|rent now|reserve a car|fleet booking|admission open|apply online|course registration|enroll now)/i.test(
+      html
+    );
+
   // Determine Website Status
   let websiteStatus: VerifiedWebsiteData['websiteStatus'] = 'Active';
   if (observableProblems.length >= 3 || (!hasViewportMeta && isInsecure)) {
@@ -531,6 +678,8 @@ export async function verifyAndAuditWebsite(rawWebsiteUrl: string): Promise<Veri
     outdatedCopyrightYear: outdatedYear,
     observableProblems,
     retrievedAt,
+    ecommerceStorefrontDetected: hasEcommerceSignals,
+    bookingWorkflowDetected: hasBookingSignals,
     evidenceItems,
   };
 }

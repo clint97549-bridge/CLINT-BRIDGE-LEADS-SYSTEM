@@ -197,7 +197,8 @@ export function validateExportCompliance(rows: Record<string, any>[]): Complianc
       }
 
       // Leaked API keys or credentials
-      if (valStr.includes('AIza') || (process.env.GEMINI_API_KEY && valStr.includes(process.env.GEMINI_API_KEY))) {
+      const serverKey = typeof process !== 'undefined' && process.env ? process.env.GEMINI_API_KEY : undefined;
+      if (valStr.includes('AIza') || (serverKey && valStr.includes(serverKey))) {
         violations.push(`ROW_${i}: Leaked API key detected in column "${colName}".`);
       }
 

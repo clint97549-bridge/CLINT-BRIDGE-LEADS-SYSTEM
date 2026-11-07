@@ -23,6 +23,7 @@ import {
 } from './lib/firebase';
 import { buildXlsxWorkbook, downloadFile, generateCsvString } from './lib/export';
 import { sanitizeLeadForPersistence } from './lib/leadCompliance';
+import { getApiUrl } from './lib/apiConfig';
 import { Lead, ResearchRun, SuppressionItem } from './types';
 import { Navbar } from './components/Navbar';
 import { DashboardView } from './components/DashboardView';
@@ -32,14 +33,18 @@ import { LeadDetailModal } from './components/LeadDetailModal';
 import { RunHistoryView } from './components/RunHistoryView';
 import { SuppressionView } from './components/SuppressionView';
 import { DiagnosticsView } from './components/DiagnosticsView';
+import { IntegrationsView } from './components/IntegrationsView';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Application Data State
-  const [leads, setLeads] = useState<Lead[]>([]);
+  // Application Data State: allLeads contains historical database, displayedLeads isolates the active run
+  const [allLeads, setAllLeads] = useState<Lead[]>([]);
+  const [currentRunId, setCurrentRunId] = useState<string | null>(() => {
+    return localStorage.getItem('leadpulse_active_run_id') || null;
+  });
   const [runs, setRuns] = useState<ResearchRun[]>([]);
   const [suppressions, setSuppressions] = useState<SuppressionItem[]>([]);
 
@@ -61,20 +66,24 @@ export default function App() {
 
   const effectiveUserId = currentUser ? currentUser.uid : guestId;
 
-  // Secure Authorization Headers Generator (Firebase Token or Isolated Guest Session)
+  // Secure Authorization Headers Generator (Firebase Token or Isolated Session)
   const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    const activeSessionId = currentUser ? currentUser.uid : guestId;
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'X-Guest-Session': activeSessionId,
+      'X-User-Id': activeSessionId,
     };
     if (currentUser) {
       try {
         const token = await currentUser.getIdToken();
         headers['Authorization'] = `Bearer ${token}`;
       } catch (err) {
-        headers['X-Guest-Session'] = guestId;
+        console.warn('ID token retrieval notice, using active session ID:', err);
+        headers['Authorization'] = `Guest ${activeSessionId}`;
       }
     } else {
-      headers['X-Guest-Session'] = guestId;
+      headers['Authorization'] = `Guest ${activeSessionId}`;
     }
     return headers;
   };
@@ -153,7 +162,7 @@ export default function App() {
           });
 
           if (isMounted) {
-            setLeads(loadedLeads);
+            setAllLeads(loadedLeads);
             setRuns(loadedRuns);
             setSuppressions(loadedSupp);
           }
@@ -161,7 +170,7 @@ export default function App() {
           // Check local cache for guest session
           const cachedLeads = localStorage.getItem(`leads_${guestId}`);
           const cachedRuns = localStorage.getItem(`runs_${guestId}`);
-          if (cachedLeads && isMounted) setLeads(JSON.parse(cachedLeads));
+          if (cachedLeads && isMounted) setAllLeads(JSON.parse(cachedLeads));
           if (cachedRuns && isMounted) setRuns(JSON.parse(cachedRuns));
         }
       } catch (err) {
@@ -176,24 +185,34 @@ export default function App() {
     };
   }, [currentUser, effectiveUserId, guestId]);
 
-  // Execute a Research Run
+  // Execute a Research Run (with duplicate submission prevention)
   const handleExecuteRun = async (params: {
     country: string;
     niche: string;
+    subNiche?: string;
+    province?: string;
     location?: string;
+    customSearchTerms?: string[];
     leadCount: number;
     freshLeadsOnly: boolean;
     excludeContacted: boolean;
     minimumScore: number;
     targetStrength: 'A' | 'B' | 'ALL';
     researchDepth: 'Standard' | 'Deep';
+    requireNoWebsite?: boolean;
+    allowWeakWebsite?: boolean;
+    requireHiring?: boolean;
+    requiredContactDetails?: 'any' | 'phone_only' | 'email_only' | 'both';
+    opportunityType?: string;
   }) => {
+    if (isRunning) return; // Prevent duplicate run submissions from repeated clicks
     setIsRunning(true);
     const runId = `run_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    localStorage.setItem('leadpulse_running_job_id', runId);
 
     // Prepare duplicate and contacted keys for suppression
-    const existingDuplicateKeys = leads.map((l) => l.duplicateKey || l.companyName.toLowerCase().trim());
-    const contactedKeys = leads
+    const existingDuplicateKeys = allLeads.map((l) => l.duplicateKey || l.companyName.toLowerCase().trim());
+    const contactedKeys = allLeads
       .filter((l) => l.contacted)
       .map((l) => l.duplicateKey || l.companyName.toLowerCase().trim());
     const suppressedDomains = suppressions
@@ -207,6 +226,8 @@ export default function App() {
       runId,
       country: params.country,
       niche: params.niche,
+      subNiche: params.subNiche,
+      province: params.province,
       location: params.location || 'All Regions',
       requestedCount: params.leadCount,
       candidatesFound: 0,
@@ -222,6 +243,12 @@ export default function App() {
       durationMs: 0,
       errors: [],
       sourcesUsed: [],
+      qualificationFilters: {
+        requireNoWebsite: params.requireNoWebsite,
+        allowWeakWebsite: params.allowWeakWebsite,
+        requireHiring: params.requireHiring,
+        minQualityScore: params.minimumScore,
+      },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -231,21 +258,28 @@ export default function App() {
     try {
       // 1. Trigger backend execution with authenticated headers
       const authHeaders = await getAuthHeaders();
-      const resp = await fetch('/api/research/run', {
+      const resp = await fetch(getApiUrl('/api/research/run'), {
         method: 'POST',
         headers: authHeaders,
         body: JSON.stringify({
-          userId: effectiveUserId,
           runId,
           country: params.country,
           niche: params.niche,
+          subNiche: params.subNiche,
+          province: params.province,
           location: params.location,
+          customSearchTerms: params.customSearchTerms,
           leadCount: params.leadCount,
           freshLeadsOnly: params.freshLeadsOnly,
           excludeContacted: params.excludeContacted,
           minimumScore: params.minimumScore,
           targetStrength: params.targetStrength,
           researchDepth: params.researchDepth,
+          requireNoWebsite: params.requireNoWebsite,
+          allowWeakWebsite: params.allowWeakWebsite,
+          requireHiring: params.requireHiring,
+          requiredContactDetails: params.requiredContactDetails,
+          opportunityType: params.opportunityType,
           existingDuplicateKeys,
           contactedKeys,
           suppressedDomains,
@@ -259,7 +293,7 @@ export default function App() {
       // 2. Poll for progress until completed or failed
       const pollInterval = setInterval(async () => {
         try {
-          const pollResp = await fetch(`/api/research/status/${runId}`, {
+          const pollResp = await fetch(getApiUrl(`/api/research/status/${runId}`), {
             headers: authHeaders,
           });
           if (!pollResp.ok) return;
@@ -271,14 +305,26 @@ export default function App() {
             if (data.run.status === 'completed' || data.run.status === 'partial' || data.run.status === 'failed') {
               clearInterval(pollInterval);
               setIsRunning(false);
+              localStorage.removeItem('leadpulse_running_job_id');
 
               if (data.results && data.results.qualifiedLeads) {
                 const newLeads: Lead[] = data.results.qualifiedLeads;
-                const newRuns: ResearchRun[] = [data.run];
 
-                // Update state
-                setLeads((prev) => [...newLeads, ...prev]);
-                setRuns((prev) => [data.run, ...prev]);
+                // MANDATORY REQUIREMENT:
+                // Replace current Leads Database view with that run's results only!
+                // Keep all previous completed runs and their results in persistent Run History!
+                setCurrentRun(data.run);
+                setCurrentRunId(data.run.runId);
+                localStorage.setItem('leadpulse_active_run_id', data.run.runId);
+
+                // Update runs history
+                setRuns((prev) => [data.run, ...prev.filter((r) => r.runId !== data.run.runId)]);
+
+                // Preserve all historical leads in database
+                setAllLeads((prev) => [
+                  ...newLeads,
+                  ...prev.filter((pl) => !newLeads.some((nl) => nl.id === pl.id)),
+                ]);
 
                 // Persist to Firestore if user is authenticated
                 if (currentUser) {
@@ -310,11 +356,14 @@ export default function App() {
                   }
                 } else {
                   // Save in local storage for guest
-                  const updatedLeads = [...newLeads, ...leads];
+                  const updatedLeads = [...newLeads, ...allLeads];
                   const updatedRuns = [data.run, ...runs];
                   localStorage.setItem(`leads_${guestId}`, JSON.stringify(updatedLeads));
                   localStorage.setItem(`runs_${guestId}`, JSON.stringify(updatedRuns));
                 }
+
+                // Auto-switch to database tab to show fresh leads
+                setActiveTab('database');
               }
             }
           }
@@ -325,6 +374,8 @@ export default function App() {
     } catch (err: unknown) {
       console.error('Run execution error:', err);
       setIsRunning(false);
+      localStorage.removeItem('leadpulse_running_job_id');
+      // If run fails, DO NOT erase the last successful result set!
       setCurrentRun((prev) =>
         prev
           ? {
@@ -337,11 +388,87 @@ export default function App() {
     }
   };
 
+  // Reconnect to active running job across browser refresh
+  useEffect(() => {
+    const runningJobId = localStorage.getItem('leadpulse_running_job_id');
+    if (!runningJobId) return;
+
+    let isPolling = true;
+    setIsRunning(true);
+
+    const resumeInterval = setInterval(async () => {
+      try {
+        const authHeaders = await getAuthHeaders();
+        const pollResp = await fetch(getApiUrl(`/api/research/status/${runningJobId}`), {
+          headers: authHeaders,
+        });
+        if (!pollResp.ok) {
+          clearInterval(resumeInterval);
+          setIsRunning(false);
+          localStorage.removeItem('leadpulse_running_job_id');
+          return;
+        }
+
+        const data = await pollResp.json();
+        if (data.run && isPolling) {
+          setCurrentRun(data.run);
+
+          if (data.run.status === 'completed' || data.run.status === 'partial' || data.run.status === 'failed') {
+            clearInterval(resumeInterval);
+            setIsRunning(false);
+            localStorage.removeItem('leadpulse_running_job_id');
+
+            if (data.results && data.results.qualifiedLeads) {
+              const newLeads: Lead[] = data.results.qualifiedLeads;
+              setCurrentRun(data.run);
+              setCurrentRunId(data.run.runId);
+              localStorage.setItem('leadpulse_active_run_id', data.run.runId);
+
+              setRuns((prev) => [data.run, ...prev.filter((r) => r.runId !== data.run.runId)]);
+              setAllLeads((prev) => [
+                ...newLeads,
+                ...prev.filter((pl) => !newLeads.some((nl) => nl.id === pl.id)),
+              ]);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Reconnect poll error:', err);
+      }
+    }, 2000);
+
+    return () => {
+      isPolling = false;
+      clearInterval(resumeInterval);
+    };
+  }, []);
+
+  // Displayed Leads: Isolated to the active/selected completed run by default
+  const displayedLeads = React.useMemo(() => {
+    if (currentRunId) {
+      const runMatchingLeads = allLeads.filter((l) => l.runId === currentRunId);
+      // If the selected run has leads, return only those (isolated run view)
+      if (runMatchingLeads.length > 0) {
+        return runMatchingLeads;
+      }
+      // If currentRunId is stale / references 0 leads, fallback gracefully to all leads
+      // rather than showing an accidental blank screen to the user
+      return allLeads;
+    }
+    return allLeads;
+  }, [allLeads, currentRunId]);
+
+  // Active Run Object
+  const activeRunObj = React.useMemo(() => {
+    if (currentRun && currentRun.runId === currentRunId) return currentRun;
+    return runs.find((r) => r.runId === currentRunId) || currentRun;
+  }, [currentRun, currentRunId, runs]);
+
   // Mark Lead Contacted
   const handleToggleContacted = async (leadId: string, currentStatus: boolean) => {
     const updatedStatus = !currentStatus;
 
-    setLeads((prev) =>
+    setAllLeads((prev) =>
       prev.map((l) => (l.id === leadId ? { ...l, contacted: updatedStatus } : l))
     );
 
@@ -357,7 +484,32 @@ export default function App() {
         console.error('Firestore contact update failed:', err);
       }
     } else {
-      const updated = leads.map((l) => (l.id === leadId ? { ...l, contacted: updatedStatus } : l));
+      const updated = allLeads.map((l) => (l.id === leadId ? { ...l, contacted: updatedStatus } : l));
+      localStorage.setItem(`leads_${guestId}`, JSON.stringify(updated));
+    }
+  };
+
+  // Mark Lead Reviewed
+  const handleToggleReviewed = async (leadId: string, currentStatus: boolean) => {
+    const updatedStatus = !currentStatus;
+
+    setAllLeads((prev) =>
+      prev.map((l) => (l.id === leadId ? { ...l, isReviewed: updatedStatus } : l))
+    );
+
+    if (selectedLead && selectedLead.id === leadId) {
+      setSelectedLead((prev) => (prev ? { ...prev, isReviewed: updatedStatus } : null));
+    }
+
+    if (currentUser) {
+      try {
+        const leadRef = doc(db, 'leads', leadId);
+        await setDoc(leadRef, { isReviewed: updatedStatus }, { merge: true });
+      } catch (err) {
+        console.error('Firestore review update failed:', err);
+      }
+    } else {
+      const updated = allLeads.map((l) => (l.id === leadId ? { ...l, isReviewed: updatedStatus } : l));
       localStorage.setItem(`leads_${guestId}`, JSON.stringify(updated));
     }
   };
@@ -392,7 +544,6 @@ export default function App() {
   // Remove Suppression Entry
   const handleRemoveSuppression = async (id: string) => {
     setSuppressions((prev) => prev.filter((s) => s.id !== id));
-    // Firestore delete if authenticated
   };
 
   // Quick preset search handler from Dashboard
@@ -410,11 +561,12 @@ export default function App() {
     });
   };
 
-  // Export Leads to XLSX
-  const handleExportXlsx = (leadsToExport: Lead[]) => {
+  // Export Leads to XLSX (with optional run metadata for run-specific exports)
+  const handleExportXlsx = (leadsToExport: Lead[], runForMetadata?: ResearchRun | null) => {
     if (leadsToExport.length === 0) return;
-    const wb = buildXlsxWorkbook(leadsToExport, currentRun || undefined);
-    const filename = `LeadPulse_Verified_Leads_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const wb = buildXlsxWorkbook(leadsToExport, runForMetadata || activeRunObj || undefined);
+    const prefix = runForMetadata ? `Run_${runForMetadata.runId}_` : '';
+    const filename = `LeadPulse_${prefix}Verified_Leads_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(wb, filename);
   };
 
@@ -434,19 +586,19 @@ export default function App() {
         setActiveTab={setActiveTab}
         currentUser={currentUser}
         authLoading={authLoading}
-        totalLeadsCount={leads.length}
+        totalLeadsCount={allLeads.length}
       />
 
       {/* Main Content Viewport */}
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
         {activeTab === 'dashboard' && (
           <DashboardView
-            leads={leads}
+            leads={allLeads}
             runs={runs}
             onStartSearch={handleQuickPresetSearch}
             onNavigateTab={setActiveTab}
             onSelectLead={setSelectedLead}
-            onExportAll={() => handleExportXlsx(leads)}
+            onExportAll={() => handleExportXlsx(allLeads)}
           />
         )}
 
@@ -456,17 +608,24 @@ export default function App() {
             currentRun={currentRun}
             isRunning={isRunning}
             onNavigateTab={setActiveTab}
-            onExportRun={() => handleExportXlsx(leads)}
+            onExportRun={() => handleExportXlsx(displayedLeads, activeRunObj)}
           />
         )}
 
         {activeTab === 'database' && (
           <LeadsDatabaseView
-            leads={leads}
+            leads={displayedLeads}
             onSelectLead={setSelectedLead}
             onToggleContacted={handleToggleContacted}
-            onExportXlsx={handleExportXlsx}
-            onExportCsv={handleExportCsv}
+            onToggleReviewed={handleToggleReviewed}
+            onExportXlsx={(leadsToExport) => handleExportXlsx(leadsToExport, activeRunObj)}
+            onExportCsv={(leadsToExport) => handleExportCsv(leadsToExport)}
+            currentRun={activeRunObj}
+            totalHistoricalLeadsCount={allLeads.length}
+            onShowAllHistoricalLeads={() => {
+              setCurrentRunId(null);
+              localStorage.removeItem('leadpulse_active_run_id');
+            }}
           />
         )}
 
@@ -474,7 +633,16 @@ export default function App() {
           <RunHistoryView
             runs={runs}
             onSelectRun={(runId) => {
+              setCurrentRunId(runId);
+              localStorage.setItem('leadpulse_active_run_id', runId);
               setActiveTab('database');
+            }}
+            onExportRun={(runId) => {
+              const runLeads = allLeads.filter((l) => l.runId === runId);
+              const runObj = runs.find((r) => r.runId === runId);
+              if (runLeads.length > 0) {
+                handleExportXlsx(runLeads, runObj || null);
+              }
             }}
             onNavigateTab={setActiveTab}
           />
@@ -488,6 +656,8 @@ export default function App() {
           />
         )}
 
+        {activeTab === 'integrations' && <IntegrationsView />}
+
         {activeTab === 'diagnostics' && <DiagnosticsView />}
       </main>
 
@@ -497,6 +667,8 @@ export default function App() {
           lead={selectedLead}
           onClose={() => setSelectedLead(null)}
           onToggleContacted={handleToggleContacted}
+          onToggleReviewed={handleToggleReviewed}
+          onAddSuppression={handleAddSuppression}
         />
       )}
 

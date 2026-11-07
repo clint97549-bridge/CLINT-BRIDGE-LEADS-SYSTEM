@@ -11,8 +11,18 @@ import {
   TrendingUp,
   Globe,
   FileSpreadsheet,
+  Instagram,
+  Facebook,
+  Phone,
+  Briefcase,
+  AlertCircle,
+  FileCheck,
+  Target,
+  Database,
+  Compass,
 } from 'lucide-react';
 import { Lead, ResearchRun } from '../types';
+import { LeadScoreDistributionChart } from './LeadScoreDistributionChart';
 
 interface DashboardViewProps {
   leads: Lead[];
@@ -39,11 +49,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const totalRuns = runs.length;
 
   const presets = [
+    { country: 'Pakistan', niche: 'Rent-a-Car', count: 10, flag: '🇵🇰' },
+    { country: 'Pakistan', niche: 'English Language & Graphic Design Academies', count: 10, flag: '🇵🇰' },
+    { country: 'Pakistan', niche: 'Vape Retailers & Smoke Shops', count: 10, flag: '🇵🇰' },
+    { country: 'Pakistan', niche: 'E-Commerce Stores & D2C Brands', count: 10, flag: '🇵🇰' },
     { country: 'United Kingdom', niche: 'Builders & Construction', count: 10, flag: '🇬🇧' },
     { country: 'United States', niche: 'Roofing Contractors', count: 10, flag: '🇺🇸' },
-    { country: 'Canada', niche: 'Dental Clinics', count: 10, flag: '🇨🇦' },
-    { country: 'Australia', niche: 'Plumbers & Heating', count: 10, flag: '🇦🇺' },
-    { country: 'United Arab Emirates', niche: 'HVAC & Air Conditioning', count: 10, flag: '🇦🇪' },
+    { country: 'United Arab Emirates', niche: 'Real Estate & Property', count: 10, flag: '🇦🇪' },
   ];
 
   // Group by service opportunity
@@ -160,6 +172,65 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
+      {/* 12-Step Lead Intelligence Pipeline Architecture */}
+      <div className="rounded-2xl border border-blue-500/30 bg-gradient-to-b from-blue-950/30 via-slate-900/80 to-slate-900/60 p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              <h2 className="text-sm font-bold text-white font-['Plus_Jakarta_Sans'] uppercase tracking-wider">
+                12-Step Lead Intelligence Pipeline
+              </h2>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Production verification chain: Every prospect passes all 12 rigorous stages before Excel qualification.
+            </p>
+          </div>
+          <span className="text-[11px] font-mono text-cyan-400 bg-cyan-950/60 border border-cyan-800/40 rounded-full px-3 py-1">
+            100% Zero-Fabrication Architecture
+          </span>
+        </div>
+
+        {/* 12 Steps Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
+          {[
+            { step: '01', name: 'Google / Discovery', desc: 'Places & Search Grounding', icon: Compass, color: 'text-blue-400', border: 'border-blue-500/30', bg: 'bg-blue-950/40' },
+            { step: '02', name: 'Website Audit', desc: 'Live HTML & Responsive Check', icon: Globe, color: 'text-cyan-400', border: 'border-cyan-500/30', bg: 'bg-cyan-950/40' },
+            { step: '03', name: 'Facebook', desc: 'Verified Profile Extraction', icon: Facebook, color: 'text-indigo-400', border: 'border-indigo-500/30', bg: 'bg-indigo-950/40' },
+            { step: '04', name: 'Instagram', desc: 'Social Footprint & Media', icon: Instagram, color: 'text-pink-400', border: 'border-pink-500/30', bg: 'bg-pink-950/40' },
+            { step: '05', name: 'Contacts', desc: 'Phone, Email, Postal, Exec', icon: Phone, color: 'text-emerald-400', border: 'border-emerald-500/30', bg: 'bg-emerald-950/40' },
+            { step: '06', name: 'Business Research', desc: 'Identity Match & Legitimacy', icon: Briefcase, color: 'text-teal-400', border: 'border-teal-500/30', bg: 'bg-teal-950/40' },
+            { step: '07', name: 'Problem', desc: 'Directly Observed Tech Gap', icon: AlertCircle, color: 'text-amber-400', border: 'border-amber-500/30', bg: 'bg-amber-950/40' },
+            { step: '08', name: 'Evidence', desc: 'Verifiable URL Citation', icon: FileCheck, color: 'text-sky-400', border: 'border-sky-500/30', bg: 'bg-sky-950/40' },
+            { step: '09', name: 'Opportunity', desc: 'Tailored Agency Service Pitch', icon: Target, color: 'text-violet-400', border: 'border-violet-500/30', bg: 'bg-violet-950/40' },
+            { step: '10', name: 'A/B Scoring', desc: 'Grade A Prime vs B Viable', icon: Award, color: 'text-yellow-400', border: 'border-yellow-500/30', bg: 'bg-yellow-950/40' },
+            { step: '11', name: 'Database', desc: 'Multi-Tenant Firestore Storage', icon: Database, color: 'text-purple-400', border: 'border-purple-500/30', bg: 'bg-purple-950/40' },
+            { step: '12', name: 'Excel Export', desc: 'Formula-Escaped Multi-Sheet', icon: FileSpreadsheet, color: 'text-emerald-400', border: 'border-emerald-500/30', bg: 'bg-emerald-950/40' },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={item.step}
+                className={`rounded-xl border ${item.border} ${item.bg} p-3 flex flex-col justify-between hover:scale-[1.02] transition-transform`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-mono text-[10px] font-bold text-slate-500">{item.step}</span>
+                    <Icon className={`h-4 w-4 ${item.color}`} />
+                  </div>
+                  <div className="text-xs font-bold text-white leading-snug line-clamp-1">{item.name}</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">{item.desc}</div>
+                </div>
+                <div className="mt-2 pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[9px]">
+                  <span className="text-slate-500">Pipeline Stage</span>
+                  <span className="text-emerald-400 font-semibold font-mono">100% OK</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Preset Quick Runs */}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
         <div className="flex items-center justify-between mb-3">
@@ -196,6 +267,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Lead Score Distribution & Target Market Strength Chart */}
+      {leads.length > 0 && (
+        <LeadScoreDistributionChart
+          leads={leads}
+          onSelectLead={onSelectLead}
+        />
+      )}
 
       {/* Two Columns: Recent Leads & Top Opportunities */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

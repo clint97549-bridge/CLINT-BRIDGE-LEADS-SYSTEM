@@ -1,6 +1,7 @@
 /**
  * Worldwide country dataset with ISO codes, dial codes, major regions,
  * and localized business terminology.
+ * Default and primary priority market: Pakistan (PK).
  */
 
 export interface CountryInfo {
@@ -10,10 +11,164 @@ export interface CountryInfo {
   dialCode: string;   // without '+'
   region: string;
   majorCities: string[];
-  localTerms: Record<string, string>; // e.g. "builders" -> "contractors"
+  localTerms: Record<string, string>;
 }
 
+export interface PakistanProvince {
+  name: string;
+  code: string;
+  cities: string[];
+  keyCommercialZones: string[];
+}
+
+export const PAKISTAN_PROVINCES: PakistanProvince[] = [
+  {
+    name: 'Sindh',
+    code: 'SD',
+    cities: ['Karachi', 'Hyderabad', 'Sukkur', 'Larkana', 'Nawabshah', 'Mirpurkhas', 'Kotri', 'Thatta'],
+    keyCommercialZones: [
+      'Karachi - DHA & Clifton',
+      'Karachi - Saddar & I.I. Chundrigar',
+      'Karachi - Gulshan-e-Iqbal & Johar',
+      'Karachi - North Nazimabad & Federal B Area',
+      'Karachi - Korangi & SITE Industrial Area',
+      'Karachi - PECHS & Tariq Road',
+      'Hyderabad - Auto Bhan & Latifabad',
+      'Sukkur - Military Road',
+    ],
+  },
+  {
+    name: 'Punjab',
+    code: 'PB',
+    cities: ['Lahore', 'Faisalabad', 'Rawalpindi', 'Multan', 'Gujranwala', 'Sialkot', 'Gujrat', 'Bahawalpur', 'Sargodha', 'Sahiwal', 'Sheikhupura', 'Rahim Yar Khan', 'Jhelum', 'Kasur'],
+    keyCommercialZones: [
+      'Lahore - Gulberg (MM Alam & Main Boulevard)',
+      'Lahore - DHA Phase 1-8 & Raya',
+      'Lahore - Johar Town & Model Town',
+      'Lahore - Mall Road & Jail Road',
+      'Lahore - Badami Bagh & Circular Road',
+      'Faisalabad - D-Ground & Kohinoor City',
+      'Rawalpindi - Saddar & Commercial Market Satellite Town',
+      'Rawalpindi - Bahria Town (Phase 1-8)',
+      'Multan - Bosan Road & Gulgasht Colony',
+      'Gujranwala - Model Town & GT Road',
+      'Sialkot - Paris Road & Small Industrial Estate',
+      'Gujrat - Court Road & GT Road',
+    ],
+  },
+  {
+    name: 'Islamabad Capital Territory',
+    code: 'ICT',
+    cities: ['Islamabad'],
+    keyCommercialZones: [
+      'Islamabad - Blue Area & Jinnah Avenue',
+      'Islamabad - F-6 & Super Market',
+      'Islamabad - F-7 & Jinnah Super',
+      'Islamabad - F-10 & F-11 Markaz',
+      'Islamabad - G-9 & G-11 Markaz',
+      'Islamabad - I-8 Markaz',
+      'Islamabad - DHA Phase 2 & Bahria Town Islamabad',
+      'Islamabad - E-11 & Golra Road',
+    ],
+  },
+  {
+    name: 'Khyber Pakhtunkhwa',
+    code: 'KP',
+    cities: ['Peshawar', 'Abbottabad', 'Mardan', 'Swat / Mingora', 'Kohat', 'Dera Ismail Khan', 'Mansehra', 'Nowshera'],
+    keyCommercialZones: [
+      'Peshawar - University Road & Hayatabad',
+      'Peshawar - Saddar & Cantonment',
+      'Abbottabad - Karakoram Highway & Mansehra Road',
+      'Mardan - Bank Road',
+    ],
+  },
+  {
+    name: 'Balochistan',
+    code: 'BA',
+    cities: ['Quetta', 'Gwadar', 'Turbat', 'Khuzdar', 'Chaman', 'Hub'],
+    keyCommercialZones: [
+      'Quetta - Jinnah Road & Zarghoon Road',
+      'Quetta - Cantonment & Shahrah-e-Iqbal',
+      'Gwadar - Marine Drive & Free Zone',
+      'Hub - Industrial Trading Estate',
+    ],
+  },
+  {
+    name: 'Azad Jammu & Kashmir',
+    code: 'AJK',
+    cities: ['Muzaffarabad', 'Mirpur', 'Rawalakot', 'Kotli'],
+    keyCommercialZones: [
+      'Mirpur - Allama Iqbal Road & Sector F-1',
+      'Muzaffarabad - Domel & Secretariat Road',
+    ],
+  },
+  {
+    name: 'Gilgit-Baltistan',
+    code: 'GB',
+    cities: ['Gilgit', 'Skardu', 'Hunza (Aliabad / Karimabad)'],
+    keyCommercialZones: [
+      'Gilgit - Airport Road & City Park Road',
+      'Skardu - Main Bazaar',
+    ],
+  },
+];
+
+export const ALL_PAKISTAN_SYSTEMATIC_CITIES = [
+  'Karachi',
+  'Lahore',
+  'Islamabad',
+  'Rawalpindi',
+  'Faisalabad',
+  'Multan',
+  'Peshawar',
+  'Quetta',
+  'Gujranwala',
+  'Sialkot',
+  'Hyderabad',
+];
+
 export const COUNTRIES: CountryInfo[] = [
+  {
+    name: 'Pakistan',
+    code: 'PK',
+    code3: 'PAK',
+    dialCode: '92',
+    region: 'Asia',
+    majorCities: [
+      'Karachi',
+      'Lahore',
+      'Islamabad',
+      'Rawalpindi',
+      'Faisalabad',
+      'Multan',
+      'Peshawar',
+      'Quetta',
+      'Gujranwala',
+      'Sialkot',
+      'Hyderabad',
+      'Sukkur',
+      'Gujrat',
+      'Abbottabad',
+      'Bahawalpur',
+      'All Pakistan (Multi-City Matrix)',
+    ],
+    localTerms: {
+      builders: 'builders and developers construction companies contractors PEC registered',
+      roofing: 'roof waterproofing roof leakage repair heat proofing',
+      dental: 'dental clinics dental surgery aesthetic dental centers',
+      plumbing: 'plumbers sanitary works plumbing contractors commercial plumbing emergency plumbers',
+      electricians: 'electrical contractors electrical engineering works',
+      solicitors: 'advocates High Court law associates legal consultants',
+      estate_agents: 'real estate builders and marketing property dealers estate agency',
+      hvac: 'HVAC contractors air conditioning engineering central AC',
+      rent_a_car: 'rent a car car rental service rent a car with driver self drive luxury car hire monthly car rental',
+      english_language: 'English language centers spoken English academy IELTS preparation English coaching institute',
+      graphic_design: 'graphic design training center IT institute design academy computer college short courses vocational training',
+      vape_retail: 'vape shop vape store e-cigarette pod mod liquid flavours smoke shop retail',
+      ecommerce: 'online store D2C brand clothing apparel cosmetics shopping cart cash on delivery COD delivery across Pakistan',
+      property_managers: 'property management real estate consultants estate marketing property advisors',
+    },
+  },
   {
     name: 'United Kingdom',
     code: 'GB',
@@ -267,24 +422,6 @@ export const COUNTRIES: CountryInfo[] = [
     },
   },
   {
-    name: 'Pakistan',
-    code: 'PK',
-    code3: 'PAK',
-    dialCode: '92',
-    region: 'Asia',
-    majorCities: ['Karachi', 'Lahore', 'Islamabad', 'Rawalpindi', 'Faisalabad', 'Peshawar', 'Multan', 'Gujranwala', 'Quetta', 'Sialkot'],
-    localTerms: {
-      builders: 'builders and developers construction companies contractors PEC registered',
-      roofing: 'roof waterproofing roof leakage repair heat proofing',
-      dental: 'dental clinics dental surgery aesthetic dental centers',
-      plumbing: 'sanitary works plumbing contractors commercial plumbing',
-      electricians: 'electrical contractors electrical engineering works',
-      solicitors: 'advocates High Court law associates legal consultants',
-      estate_agents: 'real estate builders and marketing property dealers estate agency',
-      hvac: 'HVAC contractors air conditioning engineering central AC',
-    },
-  },
-  {
     name: 'India',
     code: 'IN',
     code3: 'IND',
@@ -322,9 +459,194 @@ export const COUNTRIES: CountryInfo[] = [
   },
 ];
 
+export interface UKRegion {
+  name: string;
+  code: string;
+  nation: 'England' | 'Scotland' | 'Wales' | 'Northern Ireland';
+  majorCities: string[];
+  keyPostcodeAreas: string[];
+}
+
+export const UK_NATIONS = [
+  'England',
+  'Scotland',
+  'Wales',
+  'Northern Ireland',
+] as const;
+
+export const UK_REGIONS: UKRegion[] = [
+  {
+    name: 'Greater London',
+    code: 'GL',
+    nation: 'England',
+    majorCities: ['London', 'Croydon', 'Bromley', 'Enfield', 'Harrow', 'Kingston upon Thames'],
+    keyPostcodeAreas: ['EC', 'WC', 'W', 'SW', 'SE', 'E', 'N', 'NW'],
+  },
+  {
+    name: 'North West England',
+    code: 'NW',
+    nation: 'England',
+    majorCities: ['Manchester', 'Liverpool', 'Preston', 'Bolton', 'Chester', 'Blackpool', 'Stockport'],
+    keyPostcodeAreas: ['M', 'L', 'PR', 'BL', 'CH', 'FY', 'SK'],
+  },
+  {
+    name: 'West Midlands',
+    code: 'WM',
+    nation: 'England',
+    majorCities: ['Birmingham', 'Coventry', 'Wolverhampton', 'Solihull', 'Dudley', 'Walsall'],
+    keyPostcodeAreas: ['B', 'CV', 'WV', 'DY', 'WS'],
+  },
+  {
+    name: 'Yorkshire and the Humber',
+    code: 'YH',
+    nation: 'England',
+    majorCities: ['Leeds', 'Sheffield', 'Bradford', 'York', 'Hull', 'Doncaster', 'Huddersfield'],
+    keyPostcodeAreas: ['LS', 'S', 'BD', 'YO', 'HU', 'DN', 'HD'],
+  },
+  {
+    name: 'South East England',
+    code: 'SE',
+    nation: 'England',
+    majorCities: ['Brighton', 'Southampton', 'Portsmouth', 'Reading', 'Milton Keynes', 'Oxford'],
+    keyPostcodeAreas: ['BN', 'SO', 'PO', 'RG', 'MK', 'OX'],
+  },
+  {
+    name: 'South West England',
+    code: 'SW',
+    nation: 'England',
+    majorCities: ['Bristol', 'Plymouth', 'Exeter', 'Bath', 'Bournemouth', 'Gloucester', 'Swindon'],
+    keyPostcodeAreas: ['BS', 'PL', 'EX', 'BA', 'BH', 'GL', 'SN'],
+  },
+  {
+    name: 'East of England',
+    code: 'EE',
+    nation: 'England',
+    majorCities: ['Norwich', 'Cambridge', 'Ipswich', 'Peterborough', 'Luton', 'Chelmsford', 'Colchester'],
+    keyPostcodeAreas: ['NR', 'CB', 'IP', 'PE', 'LU', 'CM', 'CO'],
+  },
+  {
+    name: 'East Midlands',
+    code: 'EM',
+    nation: 'England',
+    majorCities: ['Nottingham', 'Leicester', 'Derby', 'Northampton', 'Lincoln', 'Mansfield'],
+    keyPostcodeAreas: ['NG', 'LE', 'DE', 'NN', 'LN'],
+  },
+  {
+    name: 'North East England',
+    code: 'NE',
+    nation: 'England',
+    majorCities: ['Newcastle upon Tyne', 'Sunderland', 'Middlesbrough', 'Durham', 'Darlington'],
+    keyPostcodeAreas: ['NE', 'SR', 'TS', 'DH', 'DL'],
+  },
+  {
+    name: 'Scotland',
+    code: 'SCT',
+    nation: 'Scotland',
+    majorCities: ['Glasgow', 'Edinburgh', 'Aberdeen', 'Dundee', 'Inverness', 'Stirling', 'Perth'],
+    keyPostcodeAreas: ['G', 'EH', 'AB', 'DD', 'IV', 'FK', 'PH'],
+  },
+  {
+    name: 'Wales',
+    code: 'WLS',
+    nation: 'Wales',
+    majorCities: ['Cardiff', 'Swansea', 'Newport', 'Wrexham', 'Bangor', 'Barry'],
+    keyPostcodeAreas: ['CF', 'SA', 'NP', 'LL'],
+  },
+  {
+    name: 'Northern Ireland',
+    code: 'NIR',
+    nation: 'Northern Ireland',
+    majorCities: ['Belfast', 'Derry / Londonderry', 'Lisburn', 'Newry', 'Bangor'],
+    keyPostcodeAreas: ['BT'],
+  },
+];
+
+export interface USState {
+  name: string;
+  code: string; // 2-letter postal abbreviation
+  region: 'Northeast' | 'Midwest' | 'South' | 'West';
+  majorCities: string[];
+}
+
+export const US_STATES: USState[] = [
+  { name: 'Alabama', code: 'AL', region: 'South', majorCities: ['Birmingham', 'Montgomery', 'Huntsville', 'Mobile'] },
+  { name: 'Alaska', code: 'AK', region: 'West', majorCities: ['Anchorage', 'Fairbanks', 'Juneau'] },
+  { name: 'Arizona', code: 'AZ', region: 'West', majorCities: ['Phoenix', 'Tucson', 'Mesa', 'Scottsdale', 'Chandler'] },
+  { name: 'Arkansas', code: 'AR', region: 'South', majorCities: ['Little Rock', 'Fort Smith', 'Fayetteville'] },
+  { name: 'California', code: 'CA', region: 'West', majorCities: ['Los Angeles', 'San Diego', 'San Jose', 'San Francisco', 'Fresno', 'Sacramento', 'Long Beach', 'Oakland'] },
+  { name: 'Colorado', code: 'CO', region: 'West', majorCities: ['Denver', 'Colorado Springs', 'Aurora', 'Fort Collins', 'Boulder'] },
+  { name: 'Connecticut', code: 'CT', region: 'Northeast', majorCities: ['Bridgeport', 'New Haven', 'Stamford', 'Hartford', 'Waterbury'] },
+  { name: 'Delaware', code: 'DE', region: 'South', majorCities: ['Wilmington', 'Dover', 'Newark'] },
+  { name: 'District of Columbia', code: 'DC', region: 'South', majorCities: ['Washington DC'] },
+  { name: 'Florida', code: 'FL', region: 'South', majorCities: ['Miami', 'Orlando', 'Tampa', 'Jacksonville', 'Fort Lauderdale', 'St. Petersburg', 'Tallahassee'] },
+  { name: 'Georgia', code: 'GA', region: 'South', majorCities: ['Atlanta', 'Augusta', 'Columbus', 'Savannah', 'Athens'] },
+  { name: 'Hawaii', code: 'HI', region: 'West', majorCities: ['Honolulu', 'Hilo', 'Kailua'] },
+  { name: 'Idaho', code: 'ID', region: 'West', majorCities: ['Boise', 'Meridian', 'Nampa', 'Idaho Falls'] },
+  { name: 'Illinois', code: 'IL', region: 'Midwest', majorCities: ['Chicago', 'Aurora', 'Naperville', 'Joliet', 'Rockford', 'Springfield'] },
+  { name: 'Indiana', code: 'IN', region: 'Midwest', majorCities: ['Indianapolis', 'Fort Wayne', 'Evansville', 'South Bend', 'Carmel'] },
+  { name: 'Iowa', code: 'IA', region: 'Midwest', majorCities: ['Des Moines', 'Cedar Rapids', 'Davenport', 'Sioux City'] },
+  { name: 'Kansas', code: 'KS', region: 'Midwest', majorCities: ['Wichita', 'Overland Park', 'Kansas City', 'Topeka', 'Olathe'] },
+  { name: 'Kentucky', code: 'KY', region: 'South', majorCities: ['Louisville', 'Lexington', 'Bowling Green', 'Owensboro'] },
+  { name: 'Louisiana', code: 'LA', region: 'South', majorCities: ['New Orleans', 'Baton Rouge', 'Shreveport', 'Lafayette'] },
+  { name: 'Maine', code: 'ME', region: 'Northeast', majorCities: ['Portland', 'Lewiston', 'Bangor'] },
+  { name: 'Maryland', code: 'MD', region: 'South', majorCities: ['Baltimore', 'Frederick', 'Rockville', 'Gaithersburg', 'Annapolis'] },
+  { name: 'Massachusetts', code: 'MA', region: 'Northeast', majorCities: ['Boston', 'Worcester', 'Springfield', 'Cambridge', 'Lowell'] },
+  { name: 'Michigan', code: 'MI', region: 'Midwest', majorCities: ['Detroit', 'Grand Rapids', 'Warren', 'Sterling Heights', 'Ann Arbor'] },
+  { name: 'Minnesota', code: 'MN', region: 'Midwest', majorCities: ['Minneapolis', 'Saint Paul', 'Rochester', 'Duluth', 'Bloomington'] },
+  { name: 'Mississippi', code: 'MS', region: 'South', majorCities: ['Jackson', 'Gulfport', 'Southaven', 'Biloxi'] },
+  { name: 'Missouri', code: 'MO', region: 'Midwest', majorCities: ['Kansas City', 'Saint Louis', 'Springfield', 'Columbia', 'Independence'] },
+  { name: 'Montana', code: 'MT', region: 'West', majorCities: ['Billings', 'Missoula', 'Great Falls', 'Bozeman', 'Helena'] },
+  { name: 'Nebraska', code: 'NE', region: 'Midwest', majorCities: ['Omaha', 'Lincoln', 'Bellevue', 'Grand Island'] },
+  { name: 'Nevada', code: 'NV', region: 'West', majorCities: ['Las Vegas', 'Henderson', 'Reno', 'North Las Vegas'] },
+  { name: 'New Hampshire', code: 'NH', region: 'Northeast', majorCities: ['Manchester', 'Nashua', 'Concord', 'Dover'] },
+  { name: 'New Jersey', code: 'NJ', region: 'Northeast', majorCities: ['Newark', 'Jersey City', 'Paterson', 'Elizabeth', 'Trenton', 'Hoboken'] },
+  { name: 'New Mexico', code: 'NM', region: 'West', majorCities: ['Albuquerque', 'Las Cruces', 'Rio Rancho', 'Santa Fe'] },
+  { name: 'New York', code: 'NY', region: 'Northeast', majorCities: ['New York City', 'Buffalo', 'Rochester', 'Yonkers', 'Syracuse', 'Albany'] },
+  { name: 'North Carolina', code: 'NC', region: 'South', majorCities: ['Charlotte', 'Raleigh', 'Greensboro', 'Durham', 'Winston-Salem'] },
+  { name: 'North Dakota', code: 'ND', region: 'Midwest', majorCities: ['Fargo', 'Bismarck', 'Grand Forks', 'Minot'] },
+  { name: 'Ohio', code: 'OH', region: 'Midwest', majorCities: ['Columbus', 'Cleveland', 'Cincinnati', 'Toledo', 'Akron', 'Dayton'] },
+  { name: 'Oklahoma', code: 'OK', region: 'South', majorCities: ['Oklahoma City', 'Tulsa', 'Norman', 'Broken Arrow', 'Edmond'] },
+  { name: 'Oregon', code: 'OR', region: 'West', majorCities: ['Portland', 'Salem', 'Eugene', 'Gresham', 'Hillsboro', 'Bend'] },
+  { name: 'Pennsylvania', code: 'PA', region: 'Northeast', majorCities: ['Philadelphia', 'Pittsburgh', 'Allentown', 'Erie', 'Reading'] },
+  { name: 'Rhode Island', code: 'RI', region: 'Northeast', majorCities: ['Providence', 'Warwick', 'Cranston', 'Pawtucket'] },
+  { name: 'South Carolina', code: 'SC', region: 'South', majorCities: ['Charleston', 'Columbia', 'North Charleston', 'Mount Pleasant', 'Greenville'] },
+  { name: 'South Dakota', code: 'SD', region: 'Midwest', majorCities: ['Sioux Falls', 'Rapid City', 'Aberdeen'] },
+  { name: 'Tennessee', code: 'TN', region: 'South', majorCities: ['Nashville', 'Memphis', 'Knoxville', 'Chattanooga', 'Clarksville'] },
+  { name: 'Texas', code: 'TX', region: 'South', majorCities: ['Houston', 'San Antonio', 'Dallas', 'Austin', 'Fort Worth', 'El Paso', 'Arlington'] },
+  { name: 'Utah', code: 'UT', region: 'West', majorCities: ['Salt Lake City', 'West Valley City', 'Provo', 'West Jordan', 'Orem'] },
+  { name: 'Vermont', code: 'VT', region: 'Northeast', majorCities: ['Burlington', 'South Burlington', 'Rutland', 'Montpelier'] },
+  { name: 'Virginia', code: 'VA', region: 'South', majorCities: ['Virginia Beach', 'Norfolk', 'Chesapeake', 'Richmond', 'Arlington', 'Alexandria'] },
+  { name: 'Washington', code: 'WA', region: 'West', majorCities: ['Seattle', 'Spokane', 'Tacoma', 'Vancouver', 'Bellevue', 'Kent'] },
+  { name: 'West Virginia', code: 'WV', region: 'South', majorCities: ['Charleston', 'Huntington', 'Morgantown', 'Parkersburg'] },
+  { name: 'Wisconsin', code: 'WI', region: 'Midwest', majorCities: ['Milwaukee', 'Madison', 'Green Bay', 'Kenosha', 'Racine'] },
+  { name: 'Wyoming', code: 'WY', region: 'West', majorCities: ['Cheyenne', 'Casper', 'Laramie', 'Gillette'] },
+];
+
+export const MARKET_OPTIONS = [
+  'Pakistan',
+  'United Kingdom',
+  'United States',
+  'UK + USA',
+  'All enabled markets',
+] as const;
+
+export type MarketOption = typeof MARKET_OPTIONS[number];
+
 export function findCountry(countryInput: string): CountryInfo | undefined {
-  if (!countryInput) return undefined;
+  if (!countryInput) return COUNTRIES[0]; // Pakistan default
   const normalized = countryInput.trim().toLowerCase();
+
+  // Handle common aliases
+  if (normalized === 'gb' || normalized === 'uk' || normalized.includes('united kingdom') || normalized === 'britain' || normalized === 'england') {
+    return COUNTRIES.find((c) => c.code === 'GB');
+  }
+  if (normalized === 'us' || normalized === 'usa' || normalized.includes('united states') || normalized === 'america') {
+    return COUNTRIES.find((c) => c.code === 'US');
+  }
+  if (normalized === 'pk' || normalized.includes('pakistan')) {
+    return COUNTRIES.find((c) => c.code === 'PK');
+  }
+
   return COUNTRIES.find(
     (c) =>
       c.name.toLowerCase() === normalized ||
@@ -333,20 +655,42 @@ export function findCountry(countryInput: string): CountryInfo | undefined {
   );
 }
 
-export const POPULAR_NICHES = [
-  'Builders & Construction',
-  'Roofing Contractors',
+export { PAKISTAN_TARGET_INDUSTRIES } from './pakistanIndustries';
+
+export const CLIENT_BRIDGE_NICHES = [
+  // Pakistan High-Intent Priority Target Industries (Section 2)
   'Dental Clinics',
-  'Plumbers & Heating Engineers',
-  'Electricians & Electrical Contractors',
-  'Law Firms & Solicitors',
+  'Aesthetic, Skin and Beauty Clinics',
+  'Real Estate Companies and Agencies',
+  'E-Commerce and Clothing Brands',
+  'Education Institutes and Schools',
+  'Travel Agencies and Tour Operators',
+  'Watch Shops and Watch Retailers',
+  'Soda Shops and Beverage Businesses',
+  'Shoe Shops and Footwear Brands',
+
+  // Core Specialized & Service Niches
+  'Rent-a-Car',
+  'Spas, Aesthetics & Cosmetic Clinics',
+  'Roofing & Restoration Contractors',
+  'HVAC & Climate Control Contractors',
+  'Dental Practices & Private Clinics',
+  'Commercial Cleaning & Facility Services',
+  'Plumbers, Heating & Mechanical Contractors',
+  'Electrical Contractors & Engineering',
+  'Solicitors, Attorneys & Law Firms',
   'Real Estate & Letting Agents',
-  'HVAC & Air Conditioning',
-  'Cosmetic Clinics & Med Spas',
-  'Accounting & Financial Advisors',
-  'Automotive Repair & Detailing',
-  'Architects & Interior Designers',
-  'Commercial Cleaning Services',
-  'Solar & Renewable Energy',
-  'Veterinary Clinics',
-];
+  'Accounting & Tax Advisory Firms',
+  'Construction, Builders & Shopfitters',
+  'Solar & Renewable Energy Installers',
+  'Architecture & Interior Design Studios',
+  'English Language & Graphic Design Academies',
+  'Vape Retailers & Smoke Shops',
+  'E-Commerce Stores & D2C Brands',
+  'Auto Repair, Bodyshops & Detailing',
+  'Veterinary Hospitals & Emergency Clinics',
+  'Property Managers',
+] as const;
+
+export const POPULAR_NICHES = [...CLIENT_BRIDGE_NICHES];
+

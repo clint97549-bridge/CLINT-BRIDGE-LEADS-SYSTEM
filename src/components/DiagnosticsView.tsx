@@ -12,6 +12,7 @@ import {
   Search,
 } from 'lucide-react';
 import { testFirestoreConnection } from '../lib/firebase';
+import { getApiUrl } from '../lib/apiConfig';
 import { SystemDiagnostics } from '../types';
 
 export const DiagnosticsView: React.FC = () => {
@@ -23,7 +24,7 @@ export const DiagnosticsView: React.FC = () => {
     setLoading(true);
     try {
       // 1. Check backend API & Gemini
-      const res = await fetch('/api/diagnostics');
+      const res = await fetch(getApiUrl('/api/diagnostics'));
       const data = await res.json();
       setDiagnostics(data);
 
@@ -63,9 +64,9 @@ export const DiagnosticsView: React.FC = () => {
         </button>
       </div>
 
-      {/* Diagnostics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Gemini Service */}
+      {/* Diagnostics Grid - 6 Key Systems */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* 1. Gemini Service */}
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-400">Gemini 3.8 Flash</span>
@@ -89,55 +90,58 @@ export const DiagnosticsView: React.FC = () => {
           </p>
         </div>
 
-        {/* Actual Active Discovery Provider */}
+        {/* 2. Google Places API (New) */}
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Active Discovery</span>
+            <span className="text-xs font-semibold text-slate-400">Google Places API (New)</span>
             <Search className="h-4 w-4 text-cyan-400" />
           </div>
           <div className="flex items-center gap-2">
-            {diagnostics?.discoveryProviderActive ? (
+            {diagnostics?.placesApiActive ? (
               <>
                 <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                <span className="text-xs font-bold text-emerald-300">
-                  {diagnostics.discoveryProviderName || 'Google Places API (New)'} — Active
-                </span>
+                <span className="text-xs font-bold text-emerald-300">Active (New Places v1)</span>
+              </>
+            ) : diagnostics?.placesApiState === 'PLACES_API_QUOTA_BLOCKED' ? (
+              <>
+                <AlertTriangle className="h-5 w-5 text-amber-400" />
+                <span className="text-xs font-bold text-amber-300">Rate Limited (HTTP 429)</span>
               </>
             ) : (
               <>
                 <AlertTriangle className="h-5 w-5 text-rose-400" />
-                <span className="text-xs font-bold text-rose-300">
-                  {diagnostics?.discoveryProviderName || 'Google Places API (New)'} — Unavailable
-                </span>
+                <span className="text-xs font-bold text-rose-300">Unavailable</span>
               </>
             )}
           </div>
           <p className="text-[11px] text-slate-500">
-            Primary real candidate discovery pipeline
+            {diagnostics?.placesApiActive
+              ? 'Real commercial business discovery with Place IDs'
+              : diagnostics?.placesApiError || 'Safe Mode throttling active'}
           </p>
         </div>
 
-        {/* Search Grounding Status */}
+        {/* 3. Google Search Grounding Status */}
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Search Grounding</span>
+            <span className="text-xs font-semibold text-slate-400">Google Search Grounding</span>
             <Search className="h-4 w-4 text-blue-400" />
           </div>
           <div className="flex items-center gap-2">
             {diagnostics?.searchGroundingActive ? (
               <>
                 <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                <span className="text-xs font-bold text-emerald-300">Search Grounding — Active</span>
+                <span className="text-xs font-bold text-emerald-300">Active</span>
               </>
             ) : diagnostics?.searchGroundingQuotaBlocked ? (
               <>
                 <AlertTriangle className="h-5 w-5 text-amber-400" />
-                <span className="text-xs font-bold text-amber-300">Search Grounding — Quota Blocked</span>
+                <span className="text-xs font-bold text-amber-300">Quota Blocked (Tier Limit)</span>
               </>
             ) : (
               <>
                 <AlertTriangle className="h-5 w-5 text-rose-400" />
-                <span className="text-xs font-bold text-rose-300">Search Grounding — Unavailable</span>
+                <span className="text-xs font-bold text-rose-300">Unavailable</span>
               </>
             )}
           </div>
@@ -148,10 +152,10 @@ export const DiagnosticsView: React.FC = () => {
           </p>
         </div>
 
-        {/* Firestore Persistence */}
+        {/* 4. Firestore Persistence */}
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Firebase Firestore</span>
+            <span className="text-xs font-semibold text-slate-400">Firebase / Firestore</span>
             <Database className="h-4 w-4 text-purple-400" />
           </div>
           <div className="flex items-center gap-2">
@@ -172,18 +176,33 @@ export const DiagnosticsView: React.FC = () => {
           </p>
         </div>
 
-        {/* Security & Multi-User Rules */}
+        {/* 5. Authentication & Multi-User Security */}
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Multi-User Security</span>
+            <span className="text-xs font-semibold text-slate-400">Authentication</span>
             <ShieldCheck className="h-4 w-4 text-emerald-400" />
           </div>
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-            <span className="text-sm font-bold text-emerald-300">Enforced</span>
+            <span className="text-sm font-bold text-emerald-300">Enforced &amp; Active</span>
           </div>
           <p className="text-[11px] text-slate-500">
-            User data isolation via deployed firestore.rules
+            Server-side user isolation via firestore.rules
+          </p>
+        </div>
+
+        {/* 6. Website Verification Engine */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-400">Website Verification</span>
+            <Activity className="h-4 w-4 text-emerald-400" />
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+            <span className="text-sm font-bold text-emerald-300">Live HTML Auditor Active</span>
+          </div>
+          <p className="text-[11px] text-slate-500">
+            Server-side reachability, technical audits &amp; contact verification
           </p>
         </div>
       </div>

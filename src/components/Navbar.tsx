@@ -10,6 +10,7 @@ import {
   LogOut,
   User,
   CheckCircle2,
+  Layers,
 } from 'lucide-react';
 import { auth, googleProvider, signInWithPopup, fbSignOut } from '../lib/firebase';
 import { FirebaseUser } from '../lib/firebase';
@@ -74,6 +75,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     },
     { id: 'history', label: 'Run History', icon: History },
     { id: 'suppression', label: 'Suppression', icon: ShieldBan },
+    { id: 'integrations', label: 'Integrations', icon: Layers },
     { id: 'diagnostics', label: 'Diagnostics', icon: Activity },
   ];
 

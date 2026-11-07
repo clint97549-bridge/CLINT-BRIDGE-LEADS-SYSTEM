@@ -13,7 +13,7 @@
  * 8. Zero Restricted Data: Zero Google Atmosphere ratings or raw places payloads.
  */
 
-import { generateDuplicateKey, normalizeCompanyName } from '../lib/normalizer';
+import { generateDuplicateKey, isValidPhoneNumber, normalizeCompanyName } from '../lib/normalizer';
 import { Lead } from '../types';
 
 export interface QCResult {
@@ -56,7 +56,21 @@ const DISALLOWED_EMAIL_DOMAINS = [
   'email.com',
   'sentry.io',
   'wixpress.com',
+  'wix.com',
   'placeholder.com',
+  'webador.com',
+  'wordpress.org',
+  'wordpress.com',
+  'shopify.com',
+  'myshopify.com',
+  'squarespace.com',
+  'weebly.com',
+  'godaddy.com',
+  'hostinger.com',
+  'namecheap.com',
+  'cloudflare.com',
+  'yoursite.com',
+  'cpanel.net',
 ];
 
 const FORBIDDEN_CONTACT_NAMES = [
@@ -85,6 +99,11 @@ export function performQualityControl(
     excludeContacted: boolean;
     minimumScore: number;
     targetStrength?: 'A' | 'B' | 'ALL';
+    requireNoWebsite?: boolean;
+    allowWeakWebsite?: boolean;
+    requireHiring?: boolean;
+    requiredContactDetails?: 'any' | 'phone_only' | 'email_only' | 'both';
+    opportunityType?: string;
   }
 ): QCResult {
   const normName = normalizeCompanyName(lead.companyName);
@@ -146,15 +165,24 @@ export function performQualityControl(
   if (lead.businessEmail && lead.businessEmail !== 'Not Found') {
     const emailLower = lead.businessEmail.trim().toLowerCase();
     const domain = emailLower.split('@')[1];
-    if (!emailLower.includes('@') || !domain || DISALLOWED_EMAIL_DOMAINS.some((d) => domain === d || domain.endsWith(`.${d}`))) {
+    if (
+      !emailLower.includes('@') ||
+      !domain ||
+      DISALLOWED_EMAIL_DOMAINS.some((d) => domain === d || domain.endsWith(`.${d}`)) ||
+      emailLower.startsWith('support@webador') ||
+      emailLower.startsWith('abuse@') ||
+      emailLower.startsWith('postmaster@') ||
+      emailLower.startsWith('mailer-daemon@') ||
+      emailLower.startsWith('noreply@') ||
+      emailLower.startsWith('no-reply@')
+    ) {
       emailNotFabricated = false;
     }
   }
 
   let phoneNotFabricated = true;
   if (lead.phoneNumber && lead.phoneNumber !== 'Not Found') {
-    const digits = lead.phoneNumber.replace(/\D/g, '');
-    if (digits.length < 7 || digits === '123456789' || digits.startsWith('000000')) {
+    if (!isValidPhoneNumber(lead.phoneNumber, lead.country)) {
       phoneNotFabricated = false;
     }
   }
@@ -174,8 +202,32 @@ export function performQualityControl(
       lead.needEvidence.length >= 10
   );
 
-  // 5. Contradiction Protection
+  // 5. Contradiction Protection (Cases 1, 4 & Consistency Gates)
   let noContradictoryEvidence = true;
+
+  // Case 1: Must NOT qualify solely based on Copyright 2022
+  if (problemLower.includes('copyright 2022') || evidenceLower.includes('copyright 2022')) {
+    noContradictoryEvidence = false;
+  }
+
+  // Case 4: Must NOT report missing contact form if a genuine quote/contact mechanism exists
+  if (
+    problemLower.includes('missing contact form') ||
+    evidenceLower.includes('missing contact form') ||
+    problemLower.includes('absence of interactive contact form')
+  ) {
+    // If the business has a verified phone, email, contact page, or CTA, claim is contradictory
+    if (
+      (lead.phoneNumber && lead.phoneNumber !== 'Not Found') ||
+      (lead.businessEmail && lead.businessEmail !== 'Not Found') ||
+      (lead as any).hasContactForm ||
+      (lead as any).hasContactPage ||
+      (lead as any).hasCallToAction
+    ) {
+      noContradictoryEvidence = false;
+    }
+  }
+
   if (lead.websiteStatus === 'No Website Found') {
     // If no website found, problem must not claim website has broken HTML tags or slow load
     if (evidenceLower.includes('viewport') || evidenceLower.includes('meta description') || evidenceLower.includes('title tag')) {
@@ -197,6 +249,20 @@ export function performQualityControl(
     nicheRelevant,
     correctCountry:
       !options.requestedCountry ||
+      (options.requestedCountry.toLowerCase().includes('uk + usa') &&
+        (lead.country.toLowerCase().includes('united kingdom') ||
+          lead.country.toLowerCase().includes('united states') ||
+          lead.country.toLowerCase() === 'uk' ||
+          lead.country.toLowerCase() === 'gb' ||
+          lead.country.toLowerCase() === 'us' ||
+          lead.country.toLowerCase() === 'usa')) ||
+      (options.requestedCountry.toLowerCase().includes('all enabled') &&
+        (lead.country.toLowerCase().includes('pakistan') ||
+          lead.country.toLowerCase().includes('united kingdom') ||
+          lead.country.toLowerCase().includes('united states') ||
+          lead.country.toLowerCase() === 'pk' ||
+          lead.country.toLowerCase() === 'gb' ||
+          lead.country.toLowerCase() === 'us')) ||
       lead.country.toLowerCase().includes(options.requestedCountry.toLowerCase()) ||
       options.requestedCountry.toLowerCase().includes(lead.country.toLowerCase()),
     notDuplicate: !isDuplicate,
@@ -216,6 +282,9 @@ export function performQualityControl(
   // Rejection Evaluations
   if (!checks.realBusiness) {
     return { passed: false, rejectionReason: 'Invalid, missing, or test business name', checks };
+  }
+  if (!checks.correctCountry) {
+    return { passed: false, rejectionReason: `Business location "${lead.country}" does not match requested country "${options.requestedCountry}"`, checks };
   }
   if (!checks.nicheRelevant) {
     return { passed: false, rejectionReason: `Business is irrelevant to requested niche "${options.requestedNiche}"`, checks };
@@ -254,11 +323,25 @@ export function performQualityControl(
     return { passed: false, rejectionReason: 'Restricted Google Atmosphere content detected', checks };
   }
 
-  // Domain suppression check
+  // Suppression list checks (Domain, Phone, Company Name)
   if (lead.canonicalDomain && suppressedDomains.has(lead.canonicalDomain.toLowerCase())) {
     return {
       passed: false,
       rejectionReason: `Domain ${lead.canonicalDomain} is in the suppression list`,
+      checks,
+    };
+  }
+  if (lead.phoneNumber && lead.phoneNumber !== 'Not Found' && suppressedDomains.has(lead.phoneNumber)) {
+    return {
+      passed: false,
+      rejectionReason: `Phone number ${lead.phoneNumber} is in the suppression list`,
+      checks,
+    };
+  }
+  if (lead.companyName && suppressedDomains.has(lead.companyName.toLowerCase().trim())) {
+    return {
+      passed: false,
+      rejectionReason: `Company "${lead.companyName}" is in the suppression list`,
       checks,
     };
   }
@@ -272,12 +355,53 @@ export function performQualityControl(
     };
   }
 
-  // Lead strength filter
-  if (options.targetStrength && options.targetStrength !== 'ALL') {
-    if (lead.leadStrength !== options.targetStrength) {
+  // Required contact details check
+  if (options.requiredContactDetails === 'phone_only' && (!lead.phoneNumber || lead.phoneNumber === 'Not Found')) {
+    return { passed: false, rejectionReason: 'Public phone number required by run criteria', checks };
+  }
+  if (options.requiredContactDetails === 'email_only' && (!lead.businessEmail || lead.businessEmail === 'Not Found')) {
+    return { passed: false, rejectionReason: 'Public email address required by run criteria', checks };
+  }
+  if (options.requiredContactDetails === 'both') {
+    if (!lead.phoneNumber || lead.phoneNumber === 'Not Found' || !lead.businessEmail || lead.businessEmail === 'Not Found') {
+      return { passed: false, rejectionReason: 'Both public phone and email required by run criteria', checks };
+    }
+  }
+
+  // Opportunity Type filter check
+  if (options.opportunityType && options.opportunityType !== 'ALL' && lead.opportunityType !== options.opportunityType) {
+    return { passed: false, rejectionReason: `Lead opportunity type ${lead.opportunityType} does not match requested ${options.opportunityType}`, checks };
+  }
+
+  // User qualification control: Mandatory absence of official website
+  if (options.requireNoWebsite) {
+    if (lead.websiteStatus !== 'No Website Found') {
       return {
         passed: false,
-        rejectionReason: `Strength ${lead.leadStrength} does not match required ${options.targetStrength}`,
+        rejectionReason: `Business has a website (${lead.websiteStatus}), but run required businesses with No Official Website`,
+        checks,
+      };
+    }
+  }
+
+  // User qualification control: Weak websites disallowed
+  if (options.allowWeakWebsite === false) {
+    if (lead.websiteStatus === 'Active but Weak' || lead.websiteStatus === 'Outdated Indicators') {
+      return {
+        passed: false,
+        rejectionReason: `Website has weak or outdated indicators, which is disallowed by current run criteria`,
+        checks,
+      };
+    }
+  }
+
+  // User qualification control: Hiring evidence mandatory
+  if (options.requireHiring) {
+    const hiring = (lead.hiringEvidence || '').toLowerCase().trim();
+    if (!hiring || hiring.includes('not observed') || hiring.includes('none observed') || hiring === 'not found') {
+      return {
+        passed: false,
+        rejectionReason: `No public hiring evidence observed, but run required verified hiring activity`,
         checks,
       };
     }

@@ -2,7 +2,22 @@
  * LeadPulse AI - Enterprise B2B Lead Intelligence Types
  */
 
+import type { UKComplianceInfo, USComplianceInfo, ComplianceReviewStatus } from '../lib/compliance';
+
+export type { UKComplianceInfo, USComplianceInfo, ComplianceReviewStatus };
+
 export type LeadStrength = 'A' | 'B';
+
+export type OpportunityTier = 'High' | 'Medium' | 'Low';
+
+export type EvidenceClassification =
+  | 'Verified fact'
+  | 'Publicly listed, not independently verified'
+  | 'Observed technical issue'
+  | 'Potential sales opportunity'
+  | 'Active hiring confirmed by a relevant source'
+  | 'Not found'
+  | 'Not verified';
 
 export type WebsiteStatus =
   | 'Active'
@@ -29,6 +44,7 @@ export type PhoneStatus =
 
 export type WhatsAppStatus =
   | 'Yes — Evidence'
+  | 'Likely Mobile'
   | 'No — Evidence'
   | 'Unknown';
 
@@ -48,16 +64,57 @@ export interface FieldProvenance {
   isGoogleDerived: boolean;
 }
 
+export type LeadGrade = 'A+' | 'A' | 'B' | 'C' | 'Excluded';
+
+export type OpportunityType =
+  | 'new_website'
+  | 'website_redesign'
+  | 'booking_system'
+  | 'property_portal'
+  | 'ecommerce'
+  | 'mobile_app'
+  | 'crm'
+  | 'student_portal'
+  | 'lms'
+  | 'branding'
+  | 'seo'
+  | 'digital_marketing'
+  | 'multiple_services'
+  | 'manual_review';
+
+export type ContactAccuracyStatus =
+  | 'publicly_listed'
+  | 'technically_verified'
+  | 'unverified'
+  | 'not_found'
+  | 'manual_review_required';
+
 export interface ScoreFactors {
-  nicheRelevance: number;       // 0 - 15
-  businessLegitimacy: number;   // 0 - 15
-  digitalOpportunity: number;   // 0 - 15
-  websiteCondition: number;     // 0 - 15
-  recentNeedSignal: number;     // 0 - 10
-  evidenceQuality: number;      // 0 - 10
-  contactCompleteness: number;  // 0 - 10
-  decisionMakerConfidence: number; // 0 - 5
-  dataQuality: number;          // 0 - 5
+  // Client Bridge Pakistan 100-Point Model (Section 6)
+  websiteOpportunity?: number;           // 0 - 20 (or 25 legacy)
+  industryDigitalOpportunity?: number;   // 0 - 20
+  activeOperationsEvidence?: number;     // 0 - 15
+  growthLaunchEvidence?: number;         // 0 - 15
+  serviceFit?: number;                   // 0 - 15
+  contactAvailability?: number;          // 0 - 10
+  researchCompleteness?: number;         // 0 - 5
+
+  // Backward-compatible Client Bridge 7-Factor Model fields
+  websiteUsability?: number;             // 0 - 20
+  growthSignals?: number;                // 0 - 15
+  hiringInvestment?: number;             // 0 - 10
+  businessIdentity?: number;             // 0 - 10
+
+  // Backward-compatible granular factor fields
+  nicheRelevance?: number;               // 0 - 15
+  businessLegitimacy?: number;           // 0 - 15
+  digitalOpportunity?: number;           // 0 - 15
+  websiteCondition?: number;             // 0 - 15
+  recentNeedSignal?: number;             // 0 - 10
+  evidenceQuality?: number;              // 0 - 10
+  contactCompleteness?: number;          // 0 - 10
+  decisionMakerConfidence?: number;      // 0 - 5
+  dataQuality?: number;                  // 0 - 5
 }
 
 export interface Lead {
@@ -116,14 +173,71 @@ export interface Lead {
   
   // Qualification & Scoring
   leadStrength: LeadStrength;
+  opportunityTier?: OpportunityTier;
   leadScore: number;
   scoreFactors: ScoreFactors;
+  scoreExplanation?: string;
+  missingEvidenceWarnings?: string[];
+  hiringEvidence?: string;
+  launchEvidence?: string;
+  ecommerceStorefrontDetected?: boolean;
+  bookingWorkflowDetected?: boolean;
   
   // Status & Notes
   contacted: boolean;
   notes: string;
   createdAt: string;
   updatedAt: string;
+
+  // Multi-Market & Compliance Support (Client Bridge UK / US / PK)
+  marketCode?: 'PK' | 'GB' | 'US';
+  postcodeOrZip?: string;
+  complianceReviewStatus?: ComplianceReviewStatus;
+  ukCompliance?: UKComplianceInfo;
+  usCompliance?: USComplianceInfo;
+  leadGrade?: LeadGrade;
+
+  // Client Bridge Pakistan Specialization
+  subcategory?: string;
+  area?: string;
+  opportunityType?: OpportunityType;
+  identifiedProblem?: string;
+  recommendedService?: string;
+  whyQualifies?: string;
+  businessEvidence?: string;
+  manualVerificationNeeded?: string;
+  emailSourceUrl?: string;
+  phoneSourceUrl?: string;
+  emailAccuracyStatus?: ContactAccuracyStatus;
+  phoneAccuracyStatus?: ContactAccuracyStatus;
+  isReviewed?: boolean;
+  isSuppressed?: boolean;
+  verificationStatus?: 'Verified' | 'Unverified' | 'Needs Review' | 'Publicly Listed';
+
+  // Rich Research Workspace & Quality Indicators (Phases 5 - 17)
+  researchQuality?: 'Excellent' | 'Good' | 'Limited' | 'Rejected';
+  facebookStatus?: 'Verified' | 'Unverified' | 'Not Found';
+  facebookSource?: string;
+  facebookTimestamp?: string;
+  instagramStatus?: 'Verified' | 'Unverified' | 'Not Found';
+  instagramSource?: string;
+  instagramTimestamp?: string;
+  servicesDiscovered?: string[];
+  targetCustomers?: string;
+  businessSummary?: string;
+  commercialOpportunityDetails?: {
+    problem: string;
+    evidence: string;
+    commercialImpact: string;
+    recommendedService: string;
+    prospectRationale: string;
+  };
+  timeline?: {
+    stage: string;
+    timestamp: string;
+    status: 'completed' | 'in_progress' | 'skipped' | 'failed';
+    detail: string;
+  }[];
 }
 
 export interface EvidenceRecord {
@@ -136,7 +250,20 @@ export interface EvidenceRecord {
   evidenceTitle: string;
   evidenceDate: string;
   evidenceSummary: string;
+  classification?: EvidenceClassification;
   createdAt: string;
+}
+
+export interface IntegrationProvider {
+  id: string;
+  name: string;
+  category: 'Search & Discovery' | 'Social Intelligence' | 'Technical Auditing' | 'Data Persistence';
+  status: 'Connected' | 'Not Configured' | 'Authorization Required' | 'Quota Limited' | 'Failed';
+  capabilities: string[];
+  permissions: string[];
+  lastChecked: string;
+  setupInstructions: string;
+  safeDetails?: string;
 }
 
 export interface LeadHistoryItem {
@@ -177,6 +304,8 @@ export interface ResearchRun {
   runId: string;
   country: string;
   niche: string;
+  subNiche?: string;
+  province?: string;
   location: string;
   requestedCount: number;
   candidatesFound: number;
@@ -192,6 +321,19 @@ export interface ResearchRun {
   durationMs: number;
   errors: string[];
   sourcesUsed: string[];
+  qualificationFilters?: {
+    requireNoWebsite?: boolean;
+    allowWeakWebsite?: boolean;
+    requireHiring?: boolean;
+    minQualityScore?: number;
+    requiredContactDetails?: 'any' | 'phone_only' | 'email_only' | 'both';
+    opportunityType?: OpportunityType | 'ALL';
+  };
+  marketBreakdown?: Record<string, { requested: number; candidates: number; qualified: number; status?: string }>;
+  selectedIndustries?: string[];
+  selectedCities?: string[];
+  industryBreakdown?: Record<string, { requested: number; candidates: number; qualified: number; status?: string }>;
+  cityBreakdown?: Record<string, { requested: number; candidates: number; qualified: number; status?: string }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -208,6 +350,11 @@ export interface CandidateBusiness {
   sourceTitle?: string;
   rawSnippet?: string;
   googlePlaceId?: string; // Permitted under Section 3.2.3(a)(ii)
+  // Social & Direct Communication Metadata
+  facebook?: string;
+  instagram?: string;
+  linkedin?: string;
+  whatsapp?: string;
   // Step 6 & 9: Deterministic Candidate Provenance
   discoveryProvider?: string;
   discoverySource?: string;
@@ -226,10 +373,18 @@ export interface SearchQueryPlan {
 export interface SearchPlan {
   country: string;
   niche: string;
+  subNiche?: string;
+  customSearchTerms?: string[];
   regions: string[];
   queries: SearchQueryPlan[];
   localTerminologyUsed: string[];
   candidateTargetPoolSize: number;
+  qualificationFilters?: {
+    requireNoWebsite?: boolean;
+    allowWeakWebsite?: boolean;
+    requireHiring?: boolean;
+    minQualityScore?: number;
+  };
 }
 
 export interface SuppressionItem {
@@ -247,12 +402,25 @@ export type DiagnosticState =
   | 'SEARCH_GROUNDING_QUOTA_BLOCKED'
   | 'BUSINESS_DISCOVERY_PROVIDER_ACTIVE'
   | 'BUSINESS_DISCOVERY_PROVIDER_UNAVAILABLE'
+  | 'PLACES_API_QUOTA_BLOCKED'
   | 'DISCOVERY_SAFE_MODE';
+
+export interface ProviderStatus {
+  name: string;
+  type: 'discovery' | 'website' | 'social' | 'contact' | 'evidence';
+  status: 'Active' | 'Unavailable' | 'Rate Limited' | 'Authentication Required' | 'Error';
+  detail: string;
+  lastChecked: string;
+}
 
 export interface SystemDiagnostics {
   geminiConnected: boolean;
+  placesApiActive?: boolean;
+  placesApiState?: string;
+  placesApiError?: string;
   searchGroundingActive: boolean;
   searchGroundingQuotaBlocked?: boolean;
+  searchGroundingState?: string;
   discoveryProviderActive?: boolean;
   discoveryProviderName?: string;
   discoverySafeMode?: boolean;
@@ -260,7 +428,17 @@ export interface SystemDiagnostics {
   firebaseConfigured: boolean;
   firestoreConnected: boolean;
   authActive: boolean;
+  websiteVerificationActive?: boolean;
+  websiteVerificationState?: string;
   lastChecked: string;
   geminiModel: string;
   quotaWarning?: string;
+  providers?: ProviderStatus[];
+  metaIntegration?: {
+    connected: boolean;
+    status: 'Connected' | 'Not Connected';
+    authorizedPagesCount: number;
+    permissions: string[];
+    lastVerified?: string;
+  };
 }

@@ -15,12 +15,14 @@ interface RunHistoryViewProps {
   runs: ResearchRun[];
   onSelectRun: (runId: string) => void;
   onNavigateTab: (tab: string) => void;
+  onExportRun?: (runId: string) => void;
 }
 
 export const RunHistoryView: React.FC<RunHistoryViewProps> = ({
   runs,
   onSelectRun,
   onNavigateTab,
+  onExportRun,
 }) => {
   return (
     <div className="space-y-5">
@@ -137,16 +139,30 @@ export const RunHistoryView: React.FC<RunHistoryViewProps> = ({
                     </td>
 
                     <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => {
-                          onSelectRun(run.runId);
-                          onNavigateTab('database');
-                        }}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1 text-[11px] font-medium text-slate-300 hover:bg-slate-700 transition-all cursor-pointer"
-                      >
-                        <span>Filter Leads</span>
-                        <ArrowRight className="h-3 w-3" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => {
+                            onSelectRun(run.runId);
+                            onNavigateTab('database');
+                          }}
+                          className="inline-flex items-center gap-1 rounded-lg border border-blue-500/40 bg-blue-500/10 px-2.5 py-1 text-[11px] font-semibold text-blue-300 hover:bg-blue-500/20 transition-all cursor-pointer"
+                          title="Open and view results of this completed run only"
+                        >
+                          <span>View Results</span>
+                          <ArrowRight className="h-3 w-3" />
+                        </button>
+
+                        {onExportRun && (
+                          <button
+                            onClick={() => onExportRun(run.runId)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1 text-[11px] font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-all cursor-pointer"
+                            title="Export results of this run to Excel"
+                          >
+                            <FileSpreadsheet className="h-3 w-3 text-emerald-400" />
+                            <span>Export</span>
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
