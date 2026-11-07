@@ -1,0 +1,879 @@
+# LEADPULSE AI — CRITICAL E-COMMERCE LEAD FIX + GITHUB PRODUCTION DEPLOYMENT MASTER PROMPT
+
+## YOUR ROLE
+
+Act as a senior full-stack engineer, GitHub Actions and CI/CD specialist, deployment engineer, B2B e-commerce lead researcher, Pakistan market analyst, QA engineer, and production reliability expert.
+
+You are working on my existing project:
+
+**Application:** LeadPulse AI — B2B Lead Research & Intelligence Engine  
+**GitHub repository:** `https://github.com/clint97549-bridge/CLINT-BRIDGE-LEADS-SYSTEM`  
+**Primary market for this task:** Pakistan  
+**Business:** Client Bridge — website development, e-commerce development, mobile applications, branding, SEO, and digital marketing.
+
+This is a real software repair and deployment task.
+
+Do not just give advice. Inspect the actual project, identify the problems, implement fixes, run tests, fix failures, and provide a truthful deployment report.
+
+Do not create a new replacement application.
+
+---
+
+# PART A — CRITICAL RULES
+
+1. Preserve all existing working features.
+2. Do not delete the existing database or existing leads.
+3. Do not reset Firebase or Firestore.
+4. Do not overwrite working Pakistan functionality.
+5. Do not replace real research with demo data.
+6. Do not generate fake businesses, emails, phone numbers, or websites.
+7. Do not claim that a lead is verified unless it has actually been verified.
+8. Do not claim deployment succeeded unless the live URL has been tested.
+9. Do not expose API keys or credentials in source code, browser code, Git commits, logs, or public files.
+10. Do not make a fake 100% success dashboard.
+11. Keep the existing UI and improve it without unnecessarily redesigning the entire application.
+12. If Google AI Studio reaches a quota limit, preserve completed work and continue from the current code state when possible. Do not start over or discard working changes.
+
+**Most important:** The existing application must remain usable while these fixes are implemented.
+
+---
+
+# PART B — FIRST INSPECT THE REAL GITHUB PROJECT
+
+Open and inspect the actual GitHub repository:
+
+`https://github.com/clint97549-bridge/CLINT-BRIDGE-LEADS-SYSTEM`
+
+Inspect the default branch, recent commits, complete file tree, deployment configuration, and application source.
+
+The repository screenshot shows folders/files including:
+
+- `.github/workflows`
+- `public`
+- `scripts`
+- `src`
+- `test`
+- `.env.example`
+- `.gitignore`
+- `DEPLOYMENT.md`
+- `bun.lock`
+- `firebase-applet-config.json`
+- `firebase-blueprint.json`
+
+These are visible examples. Inspect the actual current repository because its contents may have changed.
+
+## Inspect these areas carefully
+
+### Application
+- Frontend entry point
+- Main application components
+- Lead generation form
+- Industry selector
+- Pakistan market configuration
+- E-commerce industry configuration
+- Lead discovery pipeline
+- Search provider integration
+- Research and website audit services
+- Business qualification and scoring
+- Contact extraction and verification
+- Database and persistence
+- Export functionality
+- Run history
+- Suppression system
+- API routes and backend services
+
+### GitHub deployment
+- `.github/workflows` files
+- GitHub Pages configuration
+- Build commands
+- Build output directory
+- Deployment artifact configuration
+- Environment variables
+- Backend configuration
+- Firebase configuration
+- SPA routing
+- Vite or other frontend build configuration
+- `DEPLOYMENT.md`
+- Recent GitHub Actions failure logs
+
+Do not assume the project uses a particular framework or build tool until you inspect it.
+
+---
+
+# PART C — FIX THE E-COMMERCE LEAD GENERATION PROBLEM
+
+## 1. The current problem
+
+My software is generating leads for other industries, but when I request e-commerce brand leads, it does not return proper e-commerce brands.
+
+This is a critical issue.
+
+I do not want random retail shops, generic companies, fake online stores, unrelated businesses, or businesses that only have a directory listing.
+
+I want **real Pakistani e-commerce brands and online product-selling businesses** that may need Client Bridge's services.
+
+Investigate why e-commerce discovery is failing before changing the code.
+
+Possible causes to investigate:
+
+- E-commerce industry option is not mapped to the backend.
+- The industry value is incorrect or inconsistent.
+- The search provider receives the wrong query.
+- The query is too generic.
+- The selected city is not passed to the provider.
+- The research pipeline incorrectly rejects e-commerce businesses.
+- The website classifier cannot recognise online stores.
+- The lead scorer penalises e-commerce businesses incorrectly.
+- The deduplication logic removes valid brands.
+- The contact verification stage rejects otherwise valid businesses.
+- A UI filter hides e-commerce results.
+- A provider is returning empty or irrelevant results.
+- An API quota or configuration issue prevents discovery.
+- A previous industry selection is being reused accidentally.
+
+Find the actual cause using code inspection, logs, and tests.
+
+Do not just add the words "e-commerce" to the user interface and claim the problem is fixed.
+
+## 2. Dedicated e-commerce categories
+
+Create or repair the following e-commerce industry categories.
+
+### A. Clothing and Fashion Brands
+- Women's clothing brands
+- Men's clothing brands
+- Kids' clothing brands
+- Unstitched clothing brands
+- Pret and formal wear brands
+- Modest fashion brands
+- Streetwear brands
+- Ethnic fashion brands
+- Sportswear brands
+- Fashion accessories brands
+
+### B. Footwear Brands
+- Shoes brands
+- Sneakers brands
+- Men's footwear
+- Women's footwear
+- Kids' footwear
+- Leather footwear
+- Sports shoes
+- Online footwear stores
+
+### C. Watch and Accessories Brands
+- Watch brands
+- Online watch stores
+- Fashion watches
+- Premium watch retailers
+- Bags and accessories
+- Jewellery brands
+- Wallets and leather accessories
+
+### D. Beauty and Personal Care Brands
+- Skincare brands
+- Cosmetics brands
+- Makeup brands
+- Haircare brands
+- Personal care brands
+- Beauty product stores
+
+### E. Electronics and Gadgets
+- Electronics brands
+- Mobile accessories
+- Computer accessories
+- Consumer gadgets
+- Smart devices
+- Online electronics stores
+
+### F. Home and Lifestyle Brands
+- Home decor
+- Furniture brands
+- Bedding and textile brands
+- Kitchenware
+- Home accessories
+- Lifestyle products
+
+### G. Other Online Product Brands
+- Food brands
+- Beverage brands
+- Supplements, only where legally and safely appropriate
+- Gift stores
+- Toys and baby products
+- Sports products
+- Pet products
+- General online product brands
+
+Allow custom e-commerce niches too.
+
+Do not hardcode the software to these categories only.
+
+## 3. Define a genuine e-commerce brand
+
+A business should qualify as an e-commerce prospect only when there is reasonable evidence that it sells products online or actively promotes products for online ordering.
+
+Acceptable evidence can include:
+
+- Official online store.
+- Official product catalogue with ordering capability.
+- Public brand page showing products and ordering instructions.
+- Official social media account with active product-selling activity.
+- Public product listings linked to the business.
+- An active online sales channel that can be attributed to the business.
+
+Distinguish these business types:
+
+- `ecommerce_brand`
+- `online_retailer`
+- `social_commerce_brand`
+- `manufacturer_with_online_sales`
+- `marketplace_seller`
+- `physical_retailer_only`
+- `unknown_business_type`
+
+Do not label a business as an e-commerce brand just because it sells products in a physical shop.
+
+A marketplace seller must not automatically be treated as an independent brand.
+
+## 4. Pakistan-specific discovery
+
+The market must remain Pakistan.
+
+Allow searches for:
+
+- All Pakistan
+- Karachi
+- Lahore
+- Islamabad
+- Rawalpindi
+- Faisalabad
+- Multan
+- Sialkot
+- Gujranwala
+- Peshawar
+- Hyderabad
+- Quetta
+- Other valid Pakistani cities
+
+Use location-specific discovery queries.
+
+Examples:
+
+- Pakistani clothing brands online store
+- Karachi fashion brands online shopping
+- Lahore clothing brands official website
+- Pakistan footwear brands online store
+- Pakistani skincare brands online shopping
+- Pakistan watch brands online store
+- Pakistani cosmetics brands ecommerce
+- Pakistan home decor brands online
+- Pakistan electronics online stores
+- Pakistani D2C brands
+- Pakistani Instagram clothing brands official store
+
+These are query examples, not hardcoded results.
+
+Generate appropriate query variations for each selected niche and city.
+
+Search using configured and permitted providers, including:
+
+- Google Places API
+- Configured search APIs
+- Official brand websites
+- Public official business profiles
+- Public social media pages where permitted
+- Permitted business directories
+- Licensed business-data providers, if configured
+
+Use multiple relevant queries when the provider supports them.
+
+Do not scrape restricted platforms or bypass access controls.
+
+## 5. E-commerce opportunity research
+
+For every discovered brand, check:
+
+### Website and online store
+- Does the brand have an official website?
+- Does it have an actual online store?
+- Is the store functional?
+- Does it display products?
+- Does it have product categories?
+- Does it have product detail pages?
+- Does it have a shopping cart?
+- Is checkout available?
+- Is the ordering journey clear?
+- Does the website work on mobile?
+- Are product images and descriptions presented properly?
+- Is delivery information visible?
+- Are return and exchange details visible?
+- Are contact details available?
+- Is the website secure with HTTPS?
+- Are important pages broken or incomplete?
+
+Only record issues that have actually been observed or tested.
+
+If checkout cannot be tested without placing an order, mark it `not_tested`.
+
+### Social commerce
+Where public evidence is available, check:
+
+- Is the brand actively promoting products?
+- Does it publish recent product posts?
+- Does it provide ordering instructions?
+- Does it direct customers to WhatsApp or social DMs?
+- Does it have a link to an official online store?
+- Is there a visible product catalogue?
+- Does it have a weak or missing website despite active selling?
+
+Do not invent sales volume, followers, revenue, engagement, or order numbers.
+
+### Business maturity and growth
+Look for public evidence:
+
+- New product collections
+- New launches
+- New branches
+- Public expansion announcements
+- New product categories
+- Public recruitment activity
+- New wholesale or distributor programmes
+- Other credible growth signals
+
+Record evidence URLs and dates.
+
+Do not claim a business is interested in purchasing services just because it is active online.
+
+## 6. Strong e-commerce lead scoring
+
+Implement a dedicated e-commerce scoring model.
+
+| Factor | Maximum points |
+|---|---:|
+| Verified evidence of active online product selling | 15 |
+| Missing or weak official e-commerce website | 25 |
+| Product catalogue, checkout, or conversion problems | 20 |
+| Mobile shopping and user-experience opportunities | 10 |
+| Public business activity and identity evidence | 10 |
+| Growth or new-product signals | 10 |
+| Public contact details and research completeness | 10 |
+| **Total** | **100** |
+
+### Important scoring rules
+
+- Do not award points for imaginary website problems.
+- Do not award points for unverified growth.
+- Do not treat a physical retailer as an e-commerce brand without online-selling evidence.
+- Do not treat every brand without a website as a high-intent prospect.
+- Do not give high scores simply to fill the requested lead count.
+- Explain every score.
+
+Grades:
+
+- A+: 90–100
+- A: 80–89
+- B: 65–79
+- C: 50–64
+- Below 50: exclude from default qualified results
+
+A lead should have an actual business-specific reason for being recommended.
+
+## 7. Recommended services for e-commerce brands
+
+For each lead, automatically identify the most relevant service opportunity:
+
+- New e-commerce website
+- Existing store redesign
+- Shopify development
+- Custom e-commerce development
+- Mobile shopping application
+- Product catalogue improvement
+- Shopping cart and checkout improvement
+- Branding and packaging
+- SEO
+- Social media marketing
+- Paid advertising
+- Conversion optimisation
+- CRM and customer-management integration
+
+Do not recommend a mobile app or complex custom software when a normal e-commerce website is more suitable.
+
+The recommendation must be based on the actual business situation.
+
+## 8. E-commerce lead output
+
+Show these fields in the results:
+
+- Business/brand name
+- Business type
+- E-commerce category
+- City
+- Official website
+- Online-selling evidence
+- Website status
+- Store functionality status
+- Mobile experience
+- Product catalogue status
+- Identified opportunity
+- Recommended Client Bridge service
+- Public business email
+- Email source
+- Email verification status
+- Public phone
+- Phone source
+- Lead score
+- Lead grade
+- Research date
+- Evidence URLs
+- Verification status
+
+The user must be able to open the evidence source.
+
+## 9. Strict e-commerce quality filter
+
+Provide a filter:
+
+`Only genuine e-commerce brands`
+
+When enabled:
+
+- Exclude generic physical retail shops with no online-selling evidence.
+- Exclude unrelated businesses.
+- Exclude fake or unverifiable brands.
+- Exclude duplicate records.
+- Exclude businesses with no reliable identity evidence.
+- Exclude businesses whose online-selling status cannot be established.
+- Do not include marketplace listings as independent brands without evidence.
+
+Provide a second filter:
+
+`E-commerce brands with website opportunities`
+
+When enabled, prioritise:
+
+- Active online sellers with no official website.
+- Active brands with a broken or seriously weak online store.
+- Brands with visible product-selling activity but no effective checkout.
+- Brands with poor mobile shopping experience.
+- Brands with incomplete product catalogues.
+- Brands with weak online ordering or conversion journeys.
+
+Keep a separate category for strong brands whose websites are already good, so they do not get falsely classified as needing a new website.
+
+---
+
+# PART D — FIX THE LEAD GENERATION PIPELINE
+
+Inspect the complete discovery and qualification pipeline.
+
+The existing preview shows a 12-step lead intelligence pipeline. Verify what each stage actually does.
+
+For every pipeline stage, identify:
+
+- Input
+- Output
+- Provider or service used
+- Success condition
+- Failure condition
+- Error logging
+- Retry behaviour
+- Whether the result is stored
+
+Do not display `100% OK` for a stage that has not actually executed successfully.
+
+Ensure the pipeline correctly passes:
+
+- Country
+- City
+- Industry
+- Subcategory
+- Search query
+- Target lead count
+- Minimum score
+- Website requirements
+- Contact requirements
+
+Ensure that selecting e-commerce does not accidentally run real-estate, dental, or generic all-industry searches.
+
+## Error handling
+
+When a provider returns no results:
+
+- Record the provider response status.
+- Show the actual error or empty-result reason.
+- Try permitted alternate queries where appropriate.
+- Do not create artificial leads.
+- Do not silently substitute another industry.
+
+When a provider quota is exceeded:
+
+- Preserve completed results.
+- Show a clear quota warning.
+- Do not show a false success state.
+- Allow a safe retry after quota availability.
+- Avoid repeated uncontrolled requests.
+
+---
+
+# PART E — GITHUB DEPLOYMENT FAILURE: FIX IT
+
+## 1. Current visible failure
+
+In my screen recording, the GitHub repository shows this failed workflow:
+
+`Deploy Frontend to GitHub Pages / build-and-deploy (push)`
+
+GitHub displays:
+
+`All checks have failed`
+
+The workflow appears to fail after approximately 8 seconds.
+
+Treat this as a real deployment blocker.
+
+Do not assume the failure reason. Open the actual GitHub Actions run and inspect its logs.
+
+Identify the exact failing step and error message.
+
+Possible areas to investigate:
+
+- Dependency installation
+- Bun/npm version
+- Lockfile mismatch
+- TypeScript compilation
+- Build script
+- Missing environment variables
+- Incorrect build output path
+- Vite base path
+- GitHub Pages configuration
+- Artifact upload
+- GitHub Actions permissions
+- Deployment environment
+- Firebase configuration
+- Backend URL configuration
+- Build-time secrets
+
+Fix the actual cause, not just the visible error message.
+
+## 2. GitHub Pages frontend deployment
+
+First establish whether the frontend can be safely deployed as a static site.
+
+If the application uses Vite, inspect the actual Vite configuration and determine the correct production base path for this repository:
+
+`/CLINT-BRIDGE-LEADS-SYSTEM/`
+
+Use that base path only if it matches the real GitHub Pages project-site URL and the actual build setup.
+
+Check:
+
+- Asset paths
+- CSS and JavaScript paths
+- Images and public assets
+- Client-side routing
+- Page refresh behaviour
+- 404 handling
+- Build output directory
+- Production API URLs
+
+Do not blindly add a base path if the app uses a custom domain or a different hosting architecture.
+
+## 3. GitHub Actions workflow
+
+Inspect and repair the actual workflow.
+
+Use a reliable deployment workflow appropriate for the detected framework.
+
+If using GitHub Pages, verify the required workflow permissions, such as:
+
+- `contents: read`
+- `pages: write`
+- `id-token: write`
+
+Use the appropriate official Pages deployment actions.
+
+Ensure:
+
+- Dependencies install reproducibly.
+- The correct lockfile is used.
+- Build runs successfully.
+- The actual build directory is uploaded.
+- Deployment uses the correct artifact.
+- Failures stop the workflow.
+- Successful deployment is reported accurately.
+- Concurrent deployments are handled safely.
+
+Do not replace the entire workflow without inspecting the current one.
+
+## 4. Important: frontend versus backend hosting
+
+**GitHub Pages is static frontend hosting. It does not run a Node.js/Express backend or a persistent API server.**
+
+Inspect whether LeadPulse AI requires:
+
+- Backend API server
+- Search-provider API calls
+- Business research services
+- Firebase functions
+- Scheduled jobs
+- Server-side secret storage
+- Other server-side processes
+
+If the project requires a backend, do not pretend that GitHub Pages alone hosts the complete application.
+
+Use this architecture when appropriate:
+
+- GitHub repository: source code and version control.
+- GitHub Actions: automated build and deployment.
+- GitHub Pages: static frontend, if compatible.
+- Existing or suitable backend host: server-side API and research services.
+- Existing Firebase/Firestore: database and authentication, if that is the actual architecture.
+
+First inspect existing deployment configuration and `DEPLOYMENT.md`.
+
+Prefer preserving existing configured infrastructure.
+
+If no backend hosting provider exists, explain the available options and ask for the necessary account/credentials rather than inventing them.
+
+## 5. Environment variables and security
+
+Inspect `.env.example` and the actual application configuration.
+
+Create or update a safe environment-variable documentation file.
+
+Rules:
+
+- Never commit `.env` containing secrets.
+- Never put private API keys into frontend variables.
+- Never expose private keys through `VITE_*` or other browser-exposed environment variables.
+- Use GitHub Actions secrets only for values needed by workflows.
+- Use backend environment variables for private provider credentials.
+- Use Firebase public configuration only according to the project's actual Firebase security model.
+- Check Firestore security rules and authentication restrictions.
+- Do not publish service-account JSON files.
+- Verify `.gitignore` excludes secrets and local files.
+- If a secret has already been committed, explain that it must be rotated; deleting the file alone does not invalidate the leaked secret.
+
+## 6. Production deployment verification
+
+After fixing the workflow:
+
+1. Run the local production build.
+2. Run TypeScript checks.
+3. Run the relevant tests.
+4. Commit only the intended changes.
+5. Push the changes to the correct GitHub branch, if GitHub write access is available.
+6. Inspect the new GitHub Actions run.
+7. Wait for the deployment job to finish.
+8. Confirm the deployment status.
+9. Open the actual live URL.
+10. Test the application in a browser.
+11. Verify CSS, JavaScript, images, routing, and API connectivity.
+12. Verify authentication and database access where applicable.
+13. Run a real application smoke test.
+
+Do not say "hosted successfully" if only the source code has been pushed to GitHub.
+
+Do not say "deployment successful" if GitHub Actions is still failing.
+
+---
+
+# PART F — GOOGLE AI STUDIO AND GITHUB SYNC
+
+My current workflow uses Google AI Studio and GitHub.
+
+Inspect the actual GitHub sync status.
+
+The recording shows a successful-looking sync status at one point, but the GitHub deployment workflow still fails.
+
+Treat these as two separate things:
+
+1. Source-code synchronisation.
+2. Production deployment.
+
+A successful sync does not prove that the application is deployed.
+
+Requirements:
+
+- Preserve the current repository connection.
+- Do not disconnect or replace the GitHub repository unnecessarily.
+- Do not create a second repository.
+- Do not overwrite newer GitHub changes with older AI Studio code.
+- Check the current branch and latest commit before making changes.
+- Review the diff before committing.
+- Preserve working checkpoints.
+- If quota limits interrupt the AI Studio task, resume safely.
+- Never report a successful deployment solely because the sync says it is complete.
+
+If direct GitHub access or write permission is unavailable, provide exact manual steps and clearly state what could not be executed.
+
+---
+
+# PART G — TESTS THAT MUST PASS
+
+Create or update automated tests.
+
+## E-commerce discovery tests
+
+Test at least:
+
+1. Pakistan + Clothing Brands.
+2. Pakistan + Footwear Brands.
+3. Pakistan + Watch Brands.
+4. Pakistan + Skincare Brands.
+5. Pakistan + Cosmetics Brands.
+6. Pakistan + Electronics E-commerce.
+7. Pakistan + Home Decor Brands.
+8. Pakistan + Custom E-commerce Niche.
+9. Karachi + Clothing Brands.
+10. Lahore + E-commerce Brands.
+11. Islamabad + Online Stores.
+12. All Pakistan + E-commerce Brands.
+
+Use mocked provider fixtures for repeatable automated tests.
+
+Also run real discovery tests if the configured provider credentials and quotas permit.
+
+Verify:
+
+- The correct industry reaches the discovery provider.
+- The correct country and location are passed.
+- Results are genuinely e-commerce related.
+- Physical shops without online-selling evidence are excluded from strict mode.
+- Website opportunities are correctly classified.
+- Scores are calculated correctly.
+- Duplicate brands are not repeated.
+- Contact details are not invented.
+- Empty provider responses do not create fake leads.
+- Exports contain the correct records.
+
+## Existing feature regression tests
+
+Ensure the following continue to work:
+
+- Pakistan lead generation.
+- Real estate leads.
+- Dental clinic leads.
+- Aesthetic clinic leads.
+- Education and school leads.
+- Travel agency leads.
+- Watch shop leads.
+- Shoe shop leads.
+- Existing lead database.
+- Run history.
+- Suppression list.
+- Excel export.
+- CSV export.
+- Existing filters.
+
+Do not break other industries while fixing e-commerce.
+
+## Deployment tests
+
+Run:
+
+- Dependency installation.
+- TypeScript check.
+- Unit tests.
+- Integration tests where available.
+- Production build.
+- GitHub Actions workflow.
+- Live deployment smoke test.
+
+Record the actual result of every test.
+
+---
+
+# PART H — FINAL ACCEPTANCE CRITERIA
+
+Do not mark the task complete until the following have been verified:
+
+### E-commerce
+
+- The e-commerce industry selection works.
+- Pakistan e-commerce queries reach the correct provider.
+- Clothing, footwear, watches, beauty, electronics, and home brands can be discovered.
+- Results are real businesses, not fabricated samples.
+- Strict e-commerce mode excludes unrelated physical shops.
+- Active online-selling evidence is recorded.
+- Website and conversion opportunities are researched.
+- Lead scoring is evidence-based.
+- Contact information is sourced and correctly labelled.
+- Results can be filtered and exported.
+- The e-commerce workflow has been tested.
+
+### GitHub
+
+- The exact GitHub Actions failure has been diagnosed.
+- The workflow has been repaired.
+- The production build succeeds.
+- The correct build artifact is deployed.
+- The live frontend URL works.
+- API/backend connectivity is confirmed where applicable.
+- Secrets are not exposed.
+- Existing database and application data are preserved.
+
+### Existing application
+
+- Pakistan features still work.
+- Other industry workflows still work.
+- Existing lead records remain intact.
+- Run history and exports remain functional.
+- No fake success indicators are introduced.
+
+---
+
+# PART I — FINAL REPORT
+
+At the end, provide a detailed but clear report:
+
+1. Exact reason e-commerce leads were not being generated correctly.
+2. Exact code files changed.
+3. E-commerce categories implemented.
+4. Pakistan e-commerce discovery tests performed.
+5. Actual sample results from real provider calls, if available.
+6. Provider credentials still required.
+7. Exact GitHub Actions failure reason.
+8. Deployment files changed.
+9. Build and test results.
+10. GitHub deployment status.
+11. Actual live application URL, if deployment succeeded.
+12. Backend hosting status.
+13. Firebase/database status.
+14. Security and secrets checks.
+15. Remaining issues or manual steps.
+
+Use these truthful status labels:
+
+- `IMPLEMENTED_AND_TESTED`
+- `IMPLEMENTED_NOT_TESTED`
+- `PARTIALLY_IMPLEMENTED`
+- `BLOCKED_BY_CREDENTIALS`
+- `DEPLOYMENT_FAILED`
+- `DEPLOYMENT_SUCCESSFUL_AND_LIVE_VERIFIED`
+
+Do not invent a live URL.
+
+Do not claim 100% completion when a required test or deployment is blocked.
+
+---
+
+# FINAL COMMAND
+
+Start now.
+
+Inspect the existing LeadPulse AI code and GitHub repository.
+
+First diagnose why Pakistan e-commerce brands are not being returned properly.
+
+Then repair the actual e-commerce discovery and qualification pipeline.
+
+Next diagnose and fix the GitHub Actions deployment failure.
+
+Preserve the existing application, data, Pakistan features, and other industry workflows.
+
+Build, test, deploy, and verify the real application wherever the connected tools and available credentials permit.
+
+**My required outcome is a working LeadPulse AI application that can discover genuine Pakistani e-commerce brands with real website and digital-marketing opportunities, and that is correctly deployed through GitHub with a verified working live application.**
+
+Do not stop at a plan. Do not fabricate results. Do not report success without evidence.

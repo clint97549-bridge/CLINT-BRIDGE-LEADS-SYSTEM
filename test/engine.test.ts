@@ -2031,7 +2031,7 @@ async function runTests() {
     countryMatched: true,
     websiteStatus: 'Active but Weak',
     hasWebsite: true,
-    emailStatus: 'Unverified/Pattern',
+    emailStatus: 'Public but Unverified',
     phoneStatus: 'Verified/Public',
     hasDecisionMakerName: false,
     hasRecentNeedSignal: true,
@@ -2061,7 +2061,7 @@ async function runTests() {
     emailStatus: 'Not Found',
     phoneStatus: 'Verified/Public',
     hasDecisionMakerName: false,
-    hasRecentNeedSignal: false,
+    hasRecentNeedSignal: true,
     evidenceCount: 1,
     hasEvidenceUrl: true,
     hasSocialProfiles: false,
@@ -2126,20 +2126,16 @@ async function runTests() {
   );
   assert.strictEqual(realEstateOpp, 'property_portal');
 
-  const recommendation = generateClientBridgeRecommendation({
-    companyName: 'Karachi Smile Dental Centre',
-    industry: 'Dental Clinics',
-    subcategory: 'Orthodontics & Implants',
-    city: 'Karachi',
-    websiteStatus: 'Active but Weak',
-    identifiedProblem: 'Missing online appointment booking system and weak mobile responsiveness',
-    evidence: 'Website does not include any booking widget or schedule calendar.',
-    opportunityType: 'booking_system',
-  });
+  const recommendation = generateClientBridgeRecommendation(
+    'Dental Clinics',
+    'Karachi Smile Dental Centre',
+    'Active but Weak',
+    'Karachi'
+  );
   assert(recommendation.whyQualifies.length > 0, 'Must have whyQualifies');
-  assert(recommendation.identifiedProblem.length > 0, 'Must have identifiedProblem');
-  assert(recommendation.recommendedService.includes('Booking') || recommendation.recommendedService.includes('Web'), 'Service must match booking or web');
-  assert(recommendation.businessEvidence.length > 0, 'Must have businessEvidence');
+  assert(recommendation.problem.length > 0, 'Must have problem');
+  assert(recommendation.recommendedService.includes('Booking') || recommendation.recommendedService.includes('Dental') || recommendation.recommendedService.includes('Website'), 'Service must match dental/booking/website');
+  assert(recommendation.evidence.length > 0, 'Must have evidence');
   assert(recommendation.manualVerificationNeeded.length > 0, 'Must have manualVerificationNeeded');
   console.log('✓ Test 109 Passed: Opportunity Type Determination & 5-Point Recommendation Generator Verified');
 
@@ -2171,11 +2167,15 @@ async function runTests() {
     phoneSourceUrl: 'https://pakbd.com/entry/1234',
     leadScore: 92,
     leadGrade: 'A+',
+    leadStrength: 'A',
     opportunityType: 'new_website',
     identifiedProblem: 'No official catalog website or online inventory showcase',
+    businessProblem: 'No official catalog website or online inventory showcase',
     recommendedService: 'Client Bridge E-Commerce Catalog & Web Development',
     businessEvidence: 'Operates prominent retail shop in Gulberg with Instagram showcase but no website',
+    needEvidence: 'Operates prominent retail shop in Gulberg with Instagram showcase but no website',
     source: 'https://pakbd.com/entry/1234',
+    sourceUrl: 'https://pakbd.com/entry/1234',
     verificationStatus: 'Verified',
   };
 
@@ -2187,8 +2187,8 @@ async function runTests() {
   assert.strictEqual(row['Opportunity Type'], 'new_website');
 
   const cbWorkbook = buildClientBridgeWorkbook([sampleLeadPk]);
-  const cbSheet = cbWorkbook.Sheets['Qualified Leads'];
-  assert(cbSheet, 'Qualified Leads sheet must exist');
+  const cbSheet = cbWorkbook.Sheets['Pakistan Qualified Leads'];
+  assert(cbSheet, 'Pakistan Qualified Leads sheet must exist');
   const phoneColIndex = CLIENT_BRIDGE_PAKISTAN_COLUMNS.indexOf('Public Phone');
   const cellAddress = XLSX.utils.encode_cell({ r: 1, c: phoneColIndex });
   const phoneCellInSheet = cbSheet[cellAddress];

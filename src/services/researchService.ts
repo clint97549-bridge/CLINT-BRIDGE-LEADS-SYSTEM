@@ -21,10 +21,12 @@ import {
   WhatsAppStatus,
 } from '../types';
 import {
+  classifyECommerceBusinessType,
   determineOpportunityType,
   evaluateContactAccuracyStatus,
   findTargetIndustry,
   generateClientBridgeRecommendation,
+  isECommerceNiche,
 } from '../lib/pakistanIndustries';
 import { verifyAndAuditWebsite, verifyBusinessWebsiteMatch } from './websiteVerificationService';
 
@@ -44,13 +46,14 @@ export async function conductDeepBusinessResearch(
     const nowIso = new Date().toISOString();
     const todayStr = nowIso.split('T')[0];
 
-    // Check whether candidate has a discoverable website URL
-    const hasWebsite = Boolean(
-      candidate.website &&
-        candidate.website.trim().length > 3 &&
-        candidate.website !== 'No Website Found' &&
-        candidate.website !== 'None'
-    );
+    // Check whether candidate has a discoverable website URL (excluding social media profile links)
+    const rawWebsite = (candidate.website || '').trim();
+    const isSocialLink =
+      rawWebsite.includes('instagram.com') ||
+      rawWebsite.includes('facebook.com') ||
+      rawWebsite.includes('wa.me') ||
+      rawWebsite.includes('api.whatsapp.com') ||
+      rawWebsite.includes('tiktok.com');
 
     let siteAudit: any = null;
     let website = 'No Website Found';
@@ -67,6 +70,18 @@ export async function conductDeepBusinessResearch(
     let fullAddress = candidate.address || 'Unknown';
     const city = candidate.city || 'Unknown';
     const region = candidate.region || 'Unknown';
+
+    if (isSocialLink) {
+      if (rawWebsite.includes('instagram.com') && instagram === 'Not Found') instagram = rawWebsite;
+      if (rawWebsite.includes('facebook.com') && facebook === 'Not Found') facebook = rawWebsite;
+    }
+
+    const hasWebsite = Boolean(
+      rawWebsite.length > 3 &&
+        rawWebsite !== 'No Website Found' &&
+        rawWebsite !== 'None' &&
+        !isSocialLink
+    );
 
     let topProblem = '';
     let topEvidence = '';
@@ -265,6 +280,19 @@ export async function conductDeepBusinessResearch(
       whatsApp = 'Likely Mobile';
     }
 
+    // E-Commerce Intelligence & Classification (Part C)
+    const isEcom = isECommerceNiche(niche) || isECommerceNiche(candidate.ecommerceCategory);
+    const ecomClassification = isEcom
+      ? classifyECommerceBusinessType(candidate, siteAudit)
+      : undefined;
+
+    // For social commerce sellers without a formal website, ground the specific problem & opportunity
+    if (isEcom && (!hasWebsite || ecomClassification?.businessType === 'social_commerce_brand')) {
+      topProblem = 'Brand sells through social channels (Instagram/Facebook) without an automated online store';
+      topOpportunity = 'Shopify / Custom E-Commerce Store with Automated Checkout & COD Courier Integration';
+      topEvidence = ecomClassification?.evidence || `Active commercial seller with verified product showcase but no official automated store.`;
+    }
+
     // Scoring based on verified facts
     const scoringInput = {
       hasValidBusinessName: Boolean(candidate.companyName && candidate.companyName.length > 2),
@@ -283,6 +311,13 @@ export async function conductDeepBusinessResearch(
       hasSocialProfiles: Boolean(facebook !== 'Not Found' || instagram !== 'Not Found' || linkedin !== 'Not Found'),
       ecommerceStorefrontDetected: siteAudit?.ecommerceStorefrontDetected,
       bookingWorkflowDetected: siteAudit?.bookingWorkflowDetected,
+      // Dedicated E-Commerce Fields (Part C.6)
+      isEcommerce: isEcom,
+      businessType: ecomClassification?.businessType,
+      storeFunctionalityStatus: ecomClassification?.storeStatus,
+      mobileExperience: ecomClassification?.mobileStatus,
+      productCatalogueStatus: ecomClassification?.catalogStatus,
+      onlineSellingEvidence: ecomClassification?.evidence,
     };
 
     const scoreResult = calculateLeadScore(scoringInput);
@@ -456,6 +491,14 @@ export async function conductDeepBusinessResearch(
       missingEvidenceWarnings: scoreResult.missingEvidenceWarnings,
       ecommerceStorefrontDetected: siteAudit?.ecommerceStorefrontDetected,
       bookingWorkflowDetected: siteAudit?.bookingWorkflowDetected,
+      // Dedicated E-Commerce Intelligence (Part C.8)
+      businessType: ecomClassification?.businessType,
+      ecommerceCategory: isEcom ? (candidate.ecommerceCategory || targetInd?.name || niche) : undefined,
+      onlineSellingEvidence: ecomClassification?.evidence,
+      storeFunctionalityStatus: ecomClassification?.storeStatus,
+      mobileExperience: ecomClassification?.mobileStatus,
+      productCatalogueStatus: ecomClassification?.catalogStatus,
+      isGenuineEcommerce: ecomClassification?.isGenuine,
       contacted: false,
       notes: '',
       createdAt: nowIso,

@@ -1105,7 +1105,18 @@ export class MultiSourceDiscoveryRouter implements BusinessDiscoveryProvider {
       n.includes('pret') ||
       n.includes('shoe') ||
       n.includes('footwear') ||
-      n.includes('watch')
+      n.includes('watch') ||
+      n.includes('beauty') ||
+      n.includes('skincare') ||
+      n.includes('cosmetic') ||
+      n.includes('makeup') ||
+      n.includes('electronics') ||
+      n.includes('gadget') ||
+      n.includes('home decor') ||
+      n.includes('furniture') ||
+      n.includes('lifestyle') ||
+      n.includes('boutique') ||
+      n.includes('accessories')
     ) {
       return new EcommerceStorefrontDiscoveryProvider();
     }

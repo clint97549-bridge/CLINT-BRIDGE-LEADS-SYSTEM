@@ -12,7 +12,7 @@ import {
   UK_REGIONS,
   US_STATES,
 } from '../lib/countries';
-import { findTargetIndustry } from '../lib/pakistanIndustries';
+import { findTargetIndustry, isECommerceNiche } from '../lib/pakistanIndustries';
 import { SearchPlan, SearchQueryPlan } from '../types';
 
 export interface SearchPlanOptions {
@@ -150,17 +150,34 @@ export function createSearchPlan(
     }
   }
 
-  // Commercial prefixes and angles
-  const commercialPrefixes = [
-    subNicheClean ? `${subNicheClean} ${nicheClean}` : `${nicheClean}`,
-    `${nicheClean} services`,
-    `${nicheClean} company`,
-    `${nicheClean} agency`,
-    `best ${nicheClean}`,
-    `top ${nicheClean}`,
-    `commercial ${nicheClean}`,
-    `verified ${nicheClean}`,
-  ];
+  // Check if niche is E-Commerce / D2C / Brand
+  const isEcom = isECommerceNiche(nicheClean) || isECommerceNiche(subNicheClean);
+  const effectiveTerm = subNicheClean && !subNicheClean.toLowerCase().includes(nicheClean.toLowerCase())
+    ? `${subNicheClean} ${nicheClean}`
+    : subNicheClean || nicheClean;
+
+  // Commercial prefixes and angles: specialized for E-Commerce vs Service providers
+  const commercialPrefixes = isEcom
+    ? [
+        `${effectiveTerm} online store`,
+        `Pakistani ${effectiveTerm} online shopping`,
+        `${effectiveTerm} official website`,
+        `best ${effectiveTerm} brands`,
+        `${effectiveTerm} D2C brand order online`,
+        `Instagram ${effectiveTerm} brands buy online`,
+        `top ${effectiveTerm} brands`,
+        `${effectiveTerm} cash on delivery`,
+      ]
+    : [
+        subNicheClean ? `${subNicheClean} ${nicheClean}` : `${nicheClean}`,
+        `${nicheClean} services`,
+        `${nicheClean} company`,
+        `${nicheClean} agency`,
+        `best ${nicheClean}`,
+        `top ${nicheClean}`,
+        `commercial ${nicheClean}`,
+        `verified ${nicheClean}`,
+      ];
 
   const queries: SearchQueryPlan[] = [];
 

@@ -204,6 +204,8 @@ export default function App() {
     requireHiring?: boolean;
     requiredContactDetails?: 'any' | 'phone_only' | 'email_only' | 'both';
     opportunityType?: string;
+    onlyGenuineEcommerce?: boolean;
+    ecommerceWebsiteOpportunitiesOnly?: boolean;
   }) => {
     if (isRunning) return; // Prevent duplicate run submissions from repeated clicks
     setIsRunning(true);
@@ -248,6 +250,10 @@ export default function App() {
         allowWeakWebsite: params.allowWeakWebsite,
         requireHiring: params.requireHiring,
         minQualityScore: params.minimumScore,
+        requiredContactDetails: params.requiredContactDetails,
+        opportunityType: params.opportunityType as any,
+        onlyGenuineEcommerce: params.onlyGenuineEcommerce,
+        ecommerceWebsiteOpportunitiesOnly: params.ecommerceWebsiteOpportunitiesOnly,
       },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -280,6 +286,8 @@ export default function App() {
           requireHiring: params.requireHiring,
           requiredContactDetails: params.requiredContactDetails,
           opportunityType: params.opportunityType,
+          onlyGenuineEcommerce: params.onlyGenuineEcommerce,
+          ecommerceWebsiteOpportunitiesOnly: params.ecommerceWebsiteOpportunitiesOnly,
           existingDuplicateKeys,
           contactedKeys,
           suppressedDomains,

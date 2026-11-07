@@ -37,7 +37,7 @@ import {
   US_STATES,
   CLIENT_BRIDGE_NICHES,
 } from '../lib/countries';
-import { PAKISTAN_TARGET_INDUSTRIES } from '../lib/pakistanIndustries';
+import { PAKISTAN_TARGET_INDUSTRIES, PAKISTAN_ECOMMERCE_CATEGORIES, isECommerceNiche } from '../lib/pakistanIndustries';
 import { getApiUrl } from '../lib/apiConfig';
 import { ResearchRun, SearchPlan } from '../types';
 
@@ -60,6 +60,8 @@ interface GenerateLeadsViewProps {
     requireHiring?: boolean;
     requiredContactDetails?: 'any' | 'phone_only' | 'email_only' | 'both';
     opportunityType?: string;
+    onlyGenuineEcommerce?: boolean;
+    ecommerceWebsiteOpportunitiesOnly?: boolean;
   }) => Promise<void>;
   currentRun: ResearchRun | null;
   isRunning: boolean;
@@ -92,6 +94,8 @@ export const GenerateLeadsView: React.FC<GenerateLeadsViewProps> = ({
   const [requireHiring, setRequireHiring] = useState(false);
   const [requiredContactDetails, setRequiredContactDetails] = useState<'any' | 'phone_only' | 'email_only' | 'both'>('any');
   const [opportunityTypeFilter, setOpportunityTypeFilter] = useState<string>('ALL');
+  const [onlyGenuineEcommerce, setOnlyGenuineEcommerce] = useState(false);
+  const [ecommerceWebsiteOpportunitiesOnly, setEcommerceWebsiteOpportunitiesOnly] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Search plan preview
@@ -147,6 +151,8 @@ export const GenerateLeadsView: React.FC<GenerateLeadsViewProps> = ({
           allowWeakWebsite,
           requireHiring,
           minimumScore,
+          onlyGenuineEcommerce,
+          ecommerceWebsiteOpportunitiesOnly,
         }),
       });
       const data = await resp.json();
@@ -184,6 +190,8 @@ export const GenerateLeadsView: React.FC<GenerateLeadsViewProps> = ({
       requireHiring,
       requiredContactDetails,
       opportunityType: opportunityTypeFilter !== 'ALL' ? opportunityTypeFilter : undefined,
+      onlyGenuineEcommerce,
+      ecommerceWebsiteOpportunitiesOnly,
     });
   };
 
@@ -512,6 +520,77 @@ export const GenerateLeadsView: React.FC<GenerateLeadsViewProps> = ({
                 ))}
               </div>
             </div>
+
+            {/* Dedicated E-Commerce Categories Selector (Part C.2) */}
+            {isECommerceNiche(niche) && (
+              <div className="rounded-xl border border-purple-900/50 bg-gradient-to-br from-purple-950/30 via-slate-900 to-indigo-950/20 p-3.5 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-purple-400" />
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">
+                      E-Commerce Brand Categories (Part C.2)
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-purple-300 font-mono font-semibold">7 Specialized Sectors</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {PAKISTAN_ECOMMERCE_CATEGORIES.map((cat) => {
+                    const isSelected = subNiche === cat.name || niche.toLowerCase().includes(cat.shortLabel.toLowerCase());
+                    return (
+                      <button
+                        type="button"
+                        key={cat.id}
+                        onClick={() => {
+                          setNiche(cat.name);
+                          setSubNiche(cat.subcategories[0]);
+                        }}
+                        disabled={isRunning}
+                        className={`text-left rounded-xl p-2.5 border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-purple-600/30 border-purple-500 text-white shadow-md shadow-purple-500/20 ring-1 ring-purple-500'
+                            : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:bg-slate-850 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="text-xs font-bold truncate">{cat.shortLabel}</div>
+                        <div className="text-[10px] text-slate-400 truncate mt-0.5">{cat.subcategories.slice(0, 2).join(', ')}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Subcategories for selected e-commerce category */}
+                {(() => {
+                  const activeCat =
+                    PAKISTAN_ECOMMERCE_CATEGORIES.find(
+                      (c) => c.name === niche || niche.toLowerCase().includes(c.shortLabel.toLowerCase())
+                    ) || PAKISTAN_ECOMMERCE_CATEGORIES[0];
+                  return (
+                    <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
+                      <div className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
+                        <span>Select Subcategory for {activeCat.shortLabel}:</span>
+                        <span className="text-[10px] text-purple-300">{activeCat.subcategories.length} Subcategories</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {activeCat.subcategories.map((sub) => (
+                          <button
+                            type="button"
+                            key={sub}
+                            onClick={() => setSubNiche(sub)}
+                            className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${
+                              subNiche === sub
+                                ? 'bg-purple-600/40 text-purple-200 border border-purple-500/50'
+                                : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+                            }`}
+                          >
+                            {sub}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
 
             {/* Sub-Niche / Specialization */}
             <div>
@@ -873,6 +952,48 @@ export const GenerateLeadsView: React.FC<GenerateLeadsViewProps> = ({
                         disabled={isRunning}
                         className="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500"
                       />
+                    </div>
+
+                    {/* Dedicated E-Commerce Qualification Filters (Part C) */}
+                    <div className="rounded-xl border border-purple-900/40 bg-purple-950/20 p-3 space-y-3">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-purple-300">
+                        <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                        <span>Dedicated E-Commerce Brand Gating (Part C.5)</span>
+                      </div>
+
+                      {/* Only Genuine E-Commerce Brands */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-xs text-white font-medium">Only Genuine E-Commerce Brands</div>
+                          <div className="text-[11px] text-slate-400">
+                            Exclude physical-only retailers, wholesalers, and general marketplaces. Keep only verified direct-to-consumer online brands and social commerce sellers.
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={onlyGenuineEcommerce}
+                          onChange={(e) => setOnlyGenuineEcommerce(e.target.checked)}
+                          disabled={isRunning}
+                          className="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-900 text-purple-600 focus:ring-purple-500"
+                        />
+                      </div>
+
+                      {/* E-Commerce Website Gaps Only */}
+                      <div className="flex items-start justify-between gap-3 pt-2 border-t border-purple-900/30">
+                        <div>
+                          <div className="text-xs text-white font-medium">E-Commerce Website Gaps Only (Web Dev Prospects)</div>
+                          <div className="text-[11px] text-slate-400">
+                            Prioritize brands with missing official websites, social-only DM ordering, catalog without checkout, or broken online stores.
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={ecommerceWebsiteOpportunitiesOnly}
+                          onChange={(e) => setEcommerceWebsiteOpportunitiesOnly(e.target.checked)}
+                          disabled={isRunning}
+                          className="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-900 text-purple-600 focus:ring-purple-500"
+                        />
+                      </div>
                     </div>
 
                     {/* Required Contact Details Filter (Section 7) */}

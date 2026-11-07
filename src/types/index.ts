@@ -89,6 +89,34 @@ export type ContactAccuracyStatus =
   | 'not_found'
   | 'manual_review_required';
 
+export type ECommerceBusinessType =
+  | 'ecommerce_brand'
+  | 'online_retailer'
+  | 'social_commerce_brand'
+  | 'manufacturer_with_online_sales'
+  | 'marketplace_seller'
+  | 'physical_retailer_only'
+  | 'unknown_business_type';
+
+export type StoreFunctionalityStatus =
+  | 'fully_functional'
+  | 'catalog_only_no_checkout'
+  | 'dm_ordering_only'
+  | 'broken_checkout'
+  | 'no_store'
+  | 'not_tested';
+
+export type ProductCatalogueStatus =
+  | 'rich_catalog'
+  | 'partial_catalog'
+  | 'social_feed_only'
+  | 'no_catalog';
+
+export type MobileExperienceStatus =
+  | 'optimized'
+  | 'unresponsive_flawed'
+  | 'not_tested';
+
 export interface ScoreFactors {
   // Client Bridge Pakistan 100-Point Model (Section 6)
   websiteOpportunity?: number;           // 0 - 20 (or 25 legacy)
@@ -213,6 +241,15 @@ export interface Lead {
   isReviewed?: boolean;
   isSuppressed?: boolean;
   verificationStatus?: 'Verified' | 'Unverified' | 'Needs Review' | 'Publicly Listed';
+  
+  // Dedicated E-Commerce Intelligence (Part C)
+  businessType?: ECommerceBusinessType;
+  ecommerceCategory?: string;
+  onlineSellingEvidence?: string;
+  storeFunctionalityStatus?: StoreFunctionalityStatus;
+  mobileExperience?: MobileExperienceStatus;
+  productCatalogueStatus?: ProductCatalogueStatus;
+  isGenuineEcommerce?: boolean;
 
   // Rich Research Workspace & Quality Indicators (Phases 5 - 17)
   researchQuality?: 'Excellent' | 'Good' | 'Limited' | 'Rejected';
@@ -328,6 +365,8 @@ export interface ResearchRun {
     minQualityScore?: number;
     requiredContactDetails?: 'any' | 'phone_only' | 'email_only' | 'both';
     opportunityType?: OpportunityType | 'ALL';
+    onlyGenuineEcommerce?: boolean;
+    ecommerceWebsiteOpportunitiesOnly?: boolean;
   };
   marketBreakdown?: Record<string, { requested: number; candidates: number; qualified: number; status?: string }>;
   selectedIndustries?: string[];
@@ -355,6 +394,10 @@ export interface CandidateBusiness {
   instagram?: string;
   linkedin?: string;
   whatsapp?: string;
+  // E-Commerce Metadata
+  businessType?: ECommerceBusinessType;
+  ecommerceCategory?: string;
+  onlineSellingEvidence?: string;
   // Step 6 & 9: Deterministic Candidate Provenance
   discoveryProvider?: string;
   discoverySource?: string;

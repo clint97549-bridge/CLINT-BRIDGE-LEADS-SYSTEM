@@ -22,6 +22,14 @@ export interface ScoringInput {
   hasSocialProfiles: boolean;
   ecommerceStorefrontDetected?: boolean;
   bookingWorkflowDetected?: boolean;
+  factors?: Partial<ScoreFactors>;
+  // Dedicated E-Commerce Scoring Fields (Part C.6)
+  isEcommerce?: boolean;
+  businessType?: import('../types').ECommerceBusinessType;
+  storeFunctionalityStatus?: import('../types').StoreFunctionalityStatus;
+  mobileExperience?: import('../types').MobileExperienceStatus;
+  productCatalogueStatus?: import('../types').ProductCatalogueStatus;
+  onlineSellingEvidence?: string;
 }
 
 export interface ScoreCalculationResult {
@@ -191,7 +199,7 @@ export function calculateLeadScore(input: ScoringInput): ScoreCalculationResult 
   factors.dataQuality = qualityPts;
 
   // Total Score (0 - 100)
-  const totalScore = Math.min(
+  let totalScore = Math.min(
     100,
     (factors.nicheRelevance || 0) +
       (factors.businessLegitimacy || 0) +
@@ -203,6 +211,106 @@ export function calculateLeadScore(input: ScoringInput): ScoreCalculationResult 
       (factors.decisionMakerConfidence || 0) +
       (factors.dataQuality || 0)
   );
+
+  // If Section 6 factors were explicitly passed via input.factors, sum them
+  if (input.factors) {
+    const f = input.factors;
+    if (f.websiteOpportunity !== undefined && f.industryDigitalOpportunity !== undefined) {
+      totalScore = Math.min(
+        100,
+        (f.websiteOpportunity || 0) +
+          (f.industryDigitalOpportunity || 0) +
+          (f.activeOperationsEvidence || 0) +
+          (f.growthLaunchEvidence || 0) +
+          (f.serviceFit || 0) +
+          (f.contactAvailability || 0) +
+          (f.researchCompleteness || 0)
+      );
+    }
+  }
+
+  // Dedicated E-Commerce 100-Point Model (Part C.6)
+  if (input.isEcommerce) {
+    // Factor 1: Verified evidence of active online product selling (0 - 15 pts)
+    let onlineSellingEvidencePts = 0;
+    if (input.businessType === 'ecommerce_brand' || input.businessType === 'social_commerce_brand') {
+      onlineSellingEvidencePts = 15;
+    } else if (input.businessType === 'online_retailer' || input.businessType === 'manufacturer_with_online_sales') {
+      onlineSellingEvidencePts = 12;
+    } else if (input.onlineSellingEvidence && input.onlineSellingEvidence.length > 10) {
+      onlineSellingEvidencePts = 10;
+    } else {
+      onlineSellingEvidencePts = 5;
+    }
+
+    // Factor 2: Missing or weak official e-commerce website (0 - 25 pts)
+    let websiteGapPts = 5;
+    if (input.websiteStatus === 'No Website Found') {
+      websiteGapPts = 25;
+    } else if (input.websiteStatus === 'Broken' || input.websiteStatus === 'Unreachable') {
+      websiteGapPts = 24;
+    } else if (input.websiteStatus === 'Outdated Indicators') {
+      websiteGapPts = 20;
+    } else if (input.websiteStatus === 'Active but Weak') {
+      websiteGapPts = 15;
+    }
+
+    // Factor 3: Product catalogue, checkout, or conversion problems (0 - 20 pts)
+    let catalogCheckoutGapPts = 8;
+    if (input.storeFunctionalityStatus === 'dm_ordering_only') {
+      catalogCheckoutGapPts = 20;
+    } else if (input.storeFunctionalityStatus === 'catalog_only_no_checkout') {
+      catalogCheckoutGapPts = 18;
+    } else if (input.storeFunctionalityStatus === 'broken_checkout') {
+      catalogCheckoutGapPts = 19;
+    } else if (input.productCatalogueStatus === 'partial_catalog' || input.productCatalogueStatus === 'social_feed_only') {
+      catalogCheckoutGapPts = 15;
+    }
+
+    // Factor 4: Mobile shopping and user-experience opportunities (0 - 10 pts)
+    let mobileShoppingPts = 4;
+    if (input.mobileExperience === 'unresponsive_flawed') {
+      mobileShoppingPts = 10;
+    } else if (input.mobileExperience === 'optimized') {
+      mobileShoppingPts = 6;
+    }
+
+    // Factor 5: Public business activity and identity evidence (0 - 10 pts)
+    let identityPts = 0;
+    if (input.hasValidBusinessName) identityPts += 5;
+    if (input.countryMatched) identityPts += 5;
+
+    // Factor 6: Growth or new-product signals (0 - 10 pts)
+    let growthPts = 5;
+    if (input.hasRecentNeedSignal || input.hasSocialProfiles) {
+      growthPts = 10;
+    }
+
+    // Factor 7: Public contact details and research completeness (0 - 10 pts)
+    let contactPts = 0;
+    if (input.phoneStatus === 'Verified/Public' || input.phoneStatus === 'Public') contactPts += 5;
+    if (input.emailStatus === 'Verified/Public' || input.emailStatus === 'Public but Unverified') contactPts += 5;
+    if (contactPts === 0) contactPts = 3;
+
+    totalScore = Math.min(
+      100,
+      onlineSellingEvidencePts +
+        websiteGapPts +
+        catalogCheckoutGapPts +
+        mobileShoppingPts +
+        identityPts +
+        growthPts +
+        contactPts
+    );
+
+    factors.websiteOpportunity = websiteGapPts;
+    factors.industryDigitalOpportunity = catalogCheckoutGapPts;
+    factors.activeOperationsEvidence = onlineSellingEvidencePts;
+    factors.growthLaunchEvidence = growthPts;
+    factors.serviceFit = identityPts;
+    factors.contactAvailability = contactPts;
+    factors.researchCompleteness = mobileShoppingPts;
+  }
 
   // Opportunity Tier (High: 75+, Medium: 55-74, Low: <55)
   let opportunityTier: OpportunityTier = 'Low';

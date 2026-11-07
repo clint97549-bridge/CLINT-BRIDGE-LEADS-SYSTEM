@@ -14,6 +14,7 @@
  */
 
 import { generateDuplicateKey, isValidPhoneNumber, normalizeCompanyName } from '../lib/normalizer';
+import { findTargetIndustry } from '../lib/pakistanIndustries';
 import { Lead } from '../types';
 
 export interface QCResult {
@@ -95,8 +96,8 @@ export function performQualityControl(
   options: {
     requestedCountry: string;
     requestedNiche: string;
-    freshLeadsOnly: boolean;
-    excludeContacted: boolean;
+    freshLeadsOnly?: boolean;
+    excludeContacted?: boolean;
     minimumScore: number;
     targetStrength?: 'A' | 'B' | 'ALL';
     requireNoWebsite?: boolean;
@@ -104,7 +105,10 @@ export function performQualityControl(
     requireHiring?: boolean;
     requiredContactDetails?: 'any' | 'phone_only' | 'email_only' | 'both';
     opportunityType?: string;
-  }
+  },
+  suppressedPhones?: Set<string>,
+  suppressedCompanies?: Set<string>,
+  suppressedExtra3?: Set<string>
 ): QCResult {
   const normName = normalizeCompanyName(lead.companyName);
   const dupKey = generateDuplicateKey(
@@ -129,11 +133,25 @@ export function performQualityControl(
   
   let nicheRelevant = true;
   if (options.requestedNiche && options.requestedNiche.trim().length > 2) {
-    const nicheWords = options.requestedNiche.toLowerCase().split(/\s+/).filter((w) => w.length > 3);
-    const leadContent = `${lead.companyName} ${lead.industry} ${lead.businessProblem} ${lead.salesOpportunity}`.toLowerCase();
+    const nicheWords = options.requestedNiche.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+    const leadContent = `${lead.companyName} ${lead.industry} ${(lead as any).subcategory || ''} ${lead.businessProblem || ''} ${(lead as any).identifiedProblem || ''} ${lead.salesOpportunity || ''} ${(lead as any).recommendedService || ''}`.toLowerCase();
     
     // Check if at least one niche anchor matches or if industry is aligned
-    const matchesNiche = nicheWords.some((w) => leadContent.includes(w)) || lead.industry.toLowerCase().includes(options.requestedNiche.toLowerCase());
+    const targetInd = findTargetIndustry(options.requestedNiche);
+    const leadIndDef = findTargetIndustry(lead.industry);
+    const isIndustryMatch = Boolean(
+      (targetInd && leadIndDef && targetInd.id === leadIndDef.id) ||
+      (targetInd && (lead.industry.toLowerCase().includes(targetInd.shortLabel.toLowerCase()) || lead.industry.toLowerCase().includes(targetInd.name.toLowerCase())))
+    );
+
+    const matchesNiche =
+      isIndustryMatch ||
+      lead.industry.toLowerCase().includes(options.requestedNiche.toLowerCase()) ||
+      options.requestedNiche.toLowerCase().includes(lead.industry.toLowerCase()) ||
+      nicheWords.some((w) => {
+        const stem = w.replace(/(?:es|s)$/, '');
+        return leadContent.includes(w) || (stem.length > 2 && leadContent.includes(stem));
+      });
     
     // Check for obvious niche contradictions (e.g. searching for Builders but lead is a Bakery or Dentist)
     const isContradictory =
@@ -188,18 +206,20 @@ export function performQualityControl(
   }
 
   // 4. Observable Evidence & Anti-Fluff Checks
-  const problemLower = (lead.businessProblem || '').trim().toLowerCase();
-  const evidenceLower = (lead.needEvidence || '').trim().toLowerCase();
+  const effectiveProblem = lead.identifiedProblem || lead.businessProblem || '';
+  const effectiveEvidence = lead.businessEvidence || lead.needEvidence || '';
+  const problemLower = effectiveProblem.trim().toLowerCase();
+  const evidenceLower = effectiveEvidence.trim().toLowerCase();
 
   const isGenericProblem = GENERIC_FLUFF_PHRASES.some((fluff) => problemLower === fluff);
   const isGenericEvidence = GENERIC_FLUFF_PHRASES.some((fluff) => evidenceLower === fluff);
   const noGenericFluff = !isGenericProblem && !isGenericEvidence;
 
   const needEvidenceGrounded = Boolean(
-    lead.businessProblem &&
-      lead.businessProblem.length >= 10 &&
-      lead.needEvidence &&
-      lead.needEvidence.length >= 10
+    effectiveProblem &&
+      effectiveProblem.length >= 10 &&
+      effectiveEvidence &&
+      effectiveEvidence.length >= 10
   );
 
   // 5. Contradiction Protection (Cases 1, 4 & Consistency Gates)
@@ -324,21 +344,36 @@ export function performQualityControl(
   }
 
   // Suppression list checks (Domain, Phone, Company Name)
-  if (lead.canonicalDomain && suppressedDomains.has(lead.canonicalDomain.toLowerCase())) {
+  const allSuppressed = new Set<string>();
+  for (const s of [suppressedDomains, suppressedPhones, suppressedCompanies, suppressedExtra3]) {
+    if (s && s instanceof Set) {
+      for (const val of s) {
+        if (typeof val === 'string') {
+          allSuppressed.add(val.toLowerCase().trim());
+        }
+      }
+    }
+  }
+
+  if (lead.canonicalDomain && allSuppressed.has(lead.canonicalDomain.toLowerCase().trim())) {
     return {
       passed: false,
       rejectionReason: `Domain ${lead.canonicalDomain} is in the suppression list`,
       checks,
     };
   }
-  if (lead.phoneNumber && lead.phoneNumber !== 'Not Found' && suppressedDomains.has(lead.phoneNumber)) {
-    return {
-      passed: false,
-      rejectionReason: `Phone number ${lead.phoneNumber} is in the suppression list`,
-      checks,
-    };
+  if (lead.phoneNumber && lead.phoneNumber !== 'Not Found') {
+    const rawDigits = lead.phoneNumber.replace(/\D/g, '');
+    const rawTrimmed = lead.phoneNumber.toLowerCase().trim();
+    if (allSuppressed.has(rawTrimmed) || (rawDigits && allSuppressed.has(rawDigits))) {
+      return {
+        passed: false,
+        rejectionReason: `Phone number ${lead.phoneNumber} is in the suppression list`,
+        checks,
+      };
+    }
   }
-  if (lead.companyName && suppressedDomains.has(lead.companyName.toLowerCase().trim())) {
+  if (lead.companyName && allSuppressed.has(lead.companyName.toLowerCase().trim())) {
     return {
       passed: false,
       rejectionReason: `Company "${lead.companyName}" is in the suppression list`,
@@ -402,6 +437,55 @@ export function performQualityControl(
       return {
         passed: false,
         rejectionReason: `No public hiring evidence observed, but run required verified hiring activity`,
+        checks,
+      };
+    }
+  }
+
+  // User qualification control: Only Genuine E-Commerce Brands (Part C.9)
+  if (options.onlyGenuineEcommerce) {
+    if (lead.businessType === 'physical_retailer_only') {
+      return {
+        passed: false,
+        rejectionReason: 'Business is a physical retail store with no online-selling evidence (excluded by Only Genuine E-Commerce Brands filter)',
+        checks,
+      };
+    }
+    if (lead.businessType === 'marketplace_seller') {
+      return {
+        passed: false,
+        rejectionReason: 'Business is a third-party marketplace seller without an independent brand identity',
+        checks,
+      };
+    }
+    if (lead.businessType === 'unknown_business_type' && !lead.ecommerceStorefrontDetected && !lead.onlineSellingEvidence) {
+      return {
+        passed: false,
+        rejectionReason: 'Business lacks verifiable online product selling evidence (excluded by Only Genuine E-Commerce Brands filter)',
+        checks,
+      };
+    }
+  }
+
+  // User qualification control: E-Commerce Brands with Website Opportunities (Part C.9)
+  if (options.ecommerceWebsiteOpportunitiesOnly) {
+    const hasWebsiteGap =
+      lead.websiteStatus === 'No Website Found' ||
+      lead.websiteStatus === 'Broken' ||
+      lead.websiteStatus === 'Unreachable' ||
+      lead.websiteStatus === 'Active but Weak' ||
+      lead.websiteStatus === 'Outdated Indicators' ||
+      lead.storeFunctionalityStatus === 'dm_ordering_only' ||
+      lead.storeFunctionalityStatus === 'catalog_only_no_checkout' ||
+      lead.storeFunctionalityStatus === 'broken_checkout' ||
+      lead.opportunityType === 'new_website' ||
+      lead.opportunityType === 'website_redesign' ||
+      lead.opportunityType === 'ecommerce';
+
+    if (!hasWebsiteGap) {
+      return {
+        passed: false,
+        rejectionReason: 'Business already has an active, optimized e-commerce store with no website opportunity',
         checks,
       };
     }

@@ -6,7 +6,15 @@
  * tailored Client Bridge service recommendations, and 5-point explainability.
  */
 
-import { ContactAccuracyStatus, OpportunityType, WebsiteStatus } from '../types';
+import {
+  ContactAccuracyStatus,
+  ECommerceBusinessType,
+  MobileExperienceStatus,
+  OpportunityType,
+  ProductCatalogueStatus,
+  StoreFunctionalityStatus,
+  WebsiteStatus,
+} from '../types';
 
 export interface TargetIndustryDefinition {
   id: string;
@@ -19,6 +27,175 @@ export interface TargetIndustryDefinition {
   localDiscoveryKeywords: string[];
   exampleRecommendation: string;
 }
+
+export interface ECommerceCategoryDefinition {
+  id: string;
+  name: string;
+  shortLabel: string;
+  subcategories: string[];
+  localKeywords: string[];
+}
+
+/**
+ * Dedicated E-Commerce Categories for Pakistan Market (Part C.2)
+ */
+export const PAKISTAN_ECOMMERCE_CATEGORIES: ECommerceCategoryDefinition[] = [
+  {
+    id: 'clothing-fashion',
+    name: 'Clothing and Fashion Brands',
+    shortLabel: 'Clothing & Fashion',
+    subcategories: [
+      "Women's clothing brands",
+      "Men's clothing brands",
+      "Kids' clothing brands",
+      "Unstitched clothing brands",
+      "Pret and formal wear brands",
+      "Modest fashion brands",
+      "Streetwear brands",
+      "Ethnic fashion brands",
+      "Sportswear brands",
+      "Fashion accessories brands",
+    ],
+    localKeywords: [
+      'clothing brand',
+      'pret wear',
+      'unstitched lawn',
+      'eastern wear',
+      'kurta brand',
+      'modest wear',
+      'streetwear pakistan',
+      'online boutique',
+    ],
+  },
+  {
+    id: 'footwear-brands',
+    name: 'Footwear Brands',
+    shortLabel: 'Footwear & Shoes',
+    subcategories: [
+      'Shoes brands',
+      'Sneakers brands',
+      "Men's footwear",
+      "Women's footwear",
+      "Kids' footwear",
+      'Leather footwear',
+      'Sports shoes',
+      'Online footwear stores',
+    ],
+    localKeywords: [
+      'shoes brand',
+      'leather footwear',
+      'peshawari chappal',
+      'sneakers store',
+      'khussa online',
+      'sandals brand',
+    ],
+  },
+  {
+    id: 'watch-accessories',
+    name: 'Watch and Accessories Brands',
+    shortLabel: 'Watches & Accessories',
+    subcategories: [
+      'Watch brands',
+      'Online watch stores',
+      'Fashion watches',
+      'Premium watch retailers',
+      'Bags and accessories',
+      'Jewellery brands',
+      'Wallets and leather accessories',
+    ],
+    localKeywords: [
+      'watch brand',
+      'online watch store',
+      'luxury watches',
+      'leather bags',
+      'jewelry brand',
+      'leather wallets',
+    ],
+  },
+  {
+    id: 'beauty-personal-care',
+    name: 'Beauty and Personal Care Brands',
+    shortLabel: 'Beauty & Skincare',
+    subcategories: [
+      'Skincare brands',
+      'Cosmetics brands',
+      'Makeup brands',
+      'Haircare brands',
+      'Personal care brands',
+      'Beauty product stores',
+    ],
+    localKeywords: [
+      'skincare brand',
+      'organic cosmetics',
+      'serums online',
+      'hair oils',
+      'beauty store',
+      'makeup brand pakistan',
+    ],
+  },
+  {
+    id: 'electronics-gadgets',
+    name: 'Electronics and Gadgets',
+    shortLabel: 'Electronics & Gadgets',
+    subcategories: [
+      'Electronics brands',
+      'Mobile accessories',
+      'Computer accessories',
+      'Consumer gadgets',
+      'Smart devices',
+      'Online electronics stores',
+    ],
+    localKeywords: [
+      'electronics store',
+      'mobile accessories',
+      'earbuds brand',
+      'smart watch store',
+      'gadgets online',
+    ],
+  },
+  {
+    id: 'home-lifestyle',
+    name: 'Home and Lifestyle Brands',
+    shortLabel: 'Home & Lifestyle',
+    subcategories: [
+      'Home decor',
+      'Furniture brands',
+      'Bedding and textile brands',
+      'Kitchenware',
+      'Home accessories',
+      'Lifestyle products',
+    ],
+    localKeywords: [
+      'home decor brand',
+      'bedding textile',
+      'cushions and rugs',
+      'furniture online store',
+      'kitchen accessories',
+    ],
+  },
+  {
+    id: 'other-online-brands',
+    name: 'Other Online Product Brands',
+    shortLabel: 'Other Online Brands',
+    subcategories: [
+      'Food brands',
+      'Beverage brands',
+      'Supplements and wellness',
+      'Gift stores',
+      'Toys and baby products',
+      'Sports products',
+      'Pet products',
+      'General online product brands',
+    ],
+    localKeywords: [
+      'gourmet food online',
+      'organic honey brand',
+      'toys store online',
+      'gift hamper brand',
+      'pet supplies store',
+    ],
+  },
+];
 
 export const PAKISTAN_TARGET_INDUSTRIES: TargetIndustryDefinition[] = [
   {
@@ -451,8 +628,8 @@ export const PAKISTAN_DISCOVERY_DIRECTORIES = [
 /**
  * Maps a niche string to a Pakistan Target Industry if applicable.
  */
-export function findTargetIndustry(niche: string): TargetIndustryDefinition | undefined {
-  if (!niche) return undefined;
+export function findTargetIndustry(niche: any): TargetIndustryDefinition | undefined {
+  if (!niche || typeof niche !== 'string') return undefined;
   const n = niche.toLowerCase().trim();
 
   // 1. Dental
@@ -484,7 +661,7 @@ export function findTargetIndustry(niche: string): TargetIndustryDefinition | un
     return PAKISTAN_TARGET_INDUSTRIES.find((i) => i.id === 'real-estate-companies');
   }
 
-  // 4. E-Commerce & Clothing
+  // 4. E-Commerce & Clothing / Fashion / D2C Brands
   if (
     n.includes('clothing') ||
     n.includes('apparel') ||
@@ -493,7 +670,17 @@ export function findTargetIndustry(niche: string): TargetIndustryDefinition | un
     n.includes('e-commerce') ||
     n.includes('ecommerce') ||
     n.includes('d2c') ||
-    n.includes('online store')
+    n.includes('online store') ||
+    n.includes('beauty') ||
+    n.includes('skincare') ||
+    n.includes('cosmetic') ||
+    n.includes('makeup') ||
+    n.includes('electronics') ||
+    n.includes('gadget') ||
+    n.includes('home decor') ||
+    n.includes('furniture') ||
+    n.includes('lifestyle') ||
+    n.includes('boutique')
   ) {
     return PAKISTAN_TARGET_INDUSTRIES.find((i) => i.id === 'ecommerce-clothing');
   }
@@ -552,6 +739,181 @@ export function findTargetIndustry(niche: string): TargetIndustryDefinition | un
   }
 
   return undefined;
+}
+
+/**
+ * Checks if a requested niche is an E-Commerce or D2C retail category
+ */
+export function isECommerceNiche(niche?: string): boolean {
+  if (!niche) return false;
+  const n = niche.toLowerCase();
+  return (
+    n.includes('ecommerce') ||
+    n.includes('e-commerce') ||
+    n.includes('clothing') ||
+    n.includes('apparel') ||
+    n.includes('fashion') ||
+    n.includes('pret') ||
+    n.includes('footwear') ||
+    n.includes('shoe') ||
+    n.includes('watch') ||
+    n.includes('beauty') ||
+    n.includes('skincare') ||
+    n.includes('cosmetic') ||
+    n.includes('makeup') ||
+    n.includes('electronics') ||
+    n.includes('gadget') ||
+    n.includes('home decor') ||
+    n.includes('furniture') ||
+    n.includes('lifestyle') ||
+    n.includes('online store') ||
+    n.includes('d2c') ||
+    n.includes('brand') ||
+    n.includes('social commerce') ||
+    n.includes('boutique') ||
+    n.includes('accessories')
+  );
+}
+
+/**
+ * Classifies an E-Commerce business into defined business types (Part C.3)
+ */
+export function classifyECommerceBusinessType(
+  candidate: any,
+  siteAudit?: any
+): {
+  businessType: ECommerceBusinessType;
+  evidence: string;
+  storeStatus: StoreFunctionalityStatus;
+  catalogStatus: ProductCatalogueStatus;
+  mobileStatus: MobileExperienceStatus;
+  isGenuine: boolean;
+} {
+  const snippet = `${candidate.companyName || ''} ${candidate.rawSnippet || ''} ${candidate.sourceTitle || ''} ${candidate.website || ''}`.toLowerCase();
+  const hasWebsite = Boolean(candidate.website && candidate.website !== 'No Website Found' && !candidate.website.includes('example.com'));
+  const hasStoreAudit = Boolean(siteAudit?.ecommerceStorefrontDetected);
+  const hasInstagram = Boolean(candidate.instagram && candidate.instagram !== 'Not Found');
+  const hasFacebook = Boolean(candidate.facebook && candidate.facebook !== 'Not Found');
+  const hasWhatsApp = Boolean(candidate.whatsapp || (candidate.phone && String(candidate.phone).startsWith('03')));
+
+  // Check for explicit e-commerce signals
+  const hasOnlineSellingSignals =
+    snippet.includes('cash on delivery') ||
+    snippet.includes('cod') ||
+    snippet.includes('delivery across pakistan') ||
+    snippet.includes('nationwide delivery') ||
+    snippet.includes('add to cart') ||
+    snippet.includes('shop online') ||
+    snippet.includes('order online') ||
+    snippet.includes('dm to order') ||
+    snippet.includes('order via whatsapp') ||
+    snippet.includes('cart') ||
+    snippet.includes('checkout') ||
+    snippet.includes('shopify') ||
+    snippet.includes('woocommerce') ||
+    snippet.includes('collection') ||
+    snippet.includes('unstitched') ||
+    snippet.includes('lawn') ||
+    snippet.includes('pret') ||
+    hasStoreAudit;
+
+  // Check if marketplace seller only
+  if (snippet.includes('daraz.pk') || snippet.includes('amazon.com') || snippet.includes('aliexpress')) {
+    if (!hasWebsite && !hasInstagram) {
+      return {
+        businessType: 'marketplace_seller',
+        evidence: 'Listed on third-party marketplace without independent brand web presence',
+        storeStatus: 'no_store',
+        catalogStatus: 'partial_catalog',
+        mobileStatus: 'not_tested',
+        isGenuine: false,
+      };
+    }
+  }
+
+  // Check if physical retailer only without online selling
+  const isPhysicalRetailOnly =
+    (snippet.includes('walk-in') || snippet.includes('physical store') || snippet.includes('shopping mall')) &&
+    !hasOnlineSellingSignals &&
+    !hasWebsite &&
+    !hasInstagram;
+
+  if (isPhysicalRetailOnly) {
+    return {
+      businessType: 'physical_retailer_only',
+      evidence: 'Operates physical brick-and-mortar storefront only with no observable online ordering channel',
+      storeStatus: 'no_store',
+      catalogStatus: 'no_catalog',
+      mobileStatus: 'not_tested',
+      isGenuine: false,
+    };
+  }
+
+  // Determine Store Functionality & Catalog Status
+  let storeStatus: StoreFunctionalityStatus = 'not_tested';
+  let catalogStatus: ProductCatalogueStatus = 'no_catalog';
+  let mobileStatus: MobileExperienceStatus = 'not_tested';
+
+  if (siteAudit) {
+    if (siteAudit.isReachable) {
+      mobileStatus = siteAudit.hasViewportMeta ? 'optimized' : 'unresponsive_flawed';
+      if (siteAudit.ecommerceStorefrontDetected) {
+        storeStatus = 'fully_functional';
+        catalogStatus = 'rich_catalog';
+      } else if (hasOnlineSellingSignals) {
+        storeStatus = 'catalog_only_no_checkout';
+        catalogStatus = 'partial_catalog';
+      }
+    } else if (siteAudit.websiteStatus === 'Broken' || siteAudit.websiteStatus === 'Unreachable') {
+      storeStatus = 'broken_checkout';
+      catalogStatus = 'partial_catalog';
+    }
+  }
+
+  // Check social commerce brand
+  if (!hasWebsite && (hasInstagram || hasFacebook || hasWhatsApp) && (hasOnlineSellingSignals || hasInstagram)) {
+    storeStatus = 'dm_ordering_only';
+    catalogStatus = 'social_feed_only';
+    return {
+      businessType: 'social_commerce_brand',
+      evidence: `Active product selling via social channels (${hasInstagram ? 'Instagram' : ''} ${hasFacebook ? 'Facebook' : ''} ${hasWhatsApp ? 'WhatsApp' : ''}) with Cash on Delivery and manual order coordination`,
+      storeStatus,
+      catalogStatus,
+      mobileStatus: 'optimized',
+      isGenuine: true,
+    };
+  }
+
+  if (hasWebsite && hasOnlineSellingSignals) {
+    return {
+      businessType: 'ecommerce_brand',
+      evidence: `Official web presence with online catalogue and direct consumer purchasing signals${hasStoreAudit ? ' (automated storefront detected)' : ''}`,
+      storeStatus: storeStatus === 'not_tested' ? 'fully_functional' : storeStatus,
+      catalogStatus: catalogStatus === 'no_catalog' ? 'rich_catalog' : catalogStatus,
+      mobileStatus,
+      isGenuine: true,
+    };
+  }
+
+  if (hasWebsite) {
+    return {
+      businessType: 'online_retailer',
+      evidence: 'Official web domain with digital showcase',
+      storeStatus,
+      catalogStatus,
+      mobileStatus,
+      isGenuine: true,
+    };
+  }
+
+  return {
+    businessType: 'unknown_business_type',
+    evidence: 'Insufficient public evidence to verify online selling throughput',
+    storeStatus: 'no_store',
+    catalogStatus: 'no_catalog',
+    mobileStatus: 'not_tested',
+    isGenuine: false,
+  };
 }
 
 /**
@@ -818,18 +1180,42 @@ export function generateClientBridgeRecommendation(
  */
 export function evaluateContactAccuracyStatus(
   contactValue: string,
-  isTechnicallyVerified: boolean,
-  sourceUrl?: string
+  arg2?: boolean | string,
+  arg3?: boolean | string
 ): ContactAccuracyStatus {
   if (!contactValue || contactValue === 'Not Found' || contactValue === 'Unknown' || contactValue === 'None') {
     return 'not_found';
+  }
+
+  let sourceUrl = '';
+  let isTechnicallyVerified = false;
+
+  if (typeof arg2 === 'boolean') {
+    isTechnicallyVerified = arg2;
+    if (typeof arg3 === 'string') {
+      sourceUrl = arg3;
+    }
+  } else if (typeof arg2 === 'string') {
+    if (arg2.startsWith('http') || arg2.includes('.') || arg2.includes('/')) {
+      sourceUrl = arg2;
+      if (typeof arg3 === 'boolean') {
+        isTechnicallyVerified = arg3;
+      } else if (typeof arg3 === 'string') {
+        isTechnicallyVerified = arg3.toLowerCase().includes('verified') || arg3.toLowerCase().includes('active');
+      }
+    } else {
+      isTechnicallyVerified = arg2.toLowerCase().includes('verified') || arg2.toLowerCase().includes('active');
+      if (typeof arg3 === 'string') {
+        sourceUrl = arg3;
+      }
+    }
   }
 
   if (isTechnicallyVerified) {
     return 'technically_verified';
   }
 
-  if (sourceUrl && sourceUrl.startsWith('http')) {
+  if (sourceUrl && (sourceUrl.startsWith('http') || sourceUrl.includes('.'))) {
     return 'publicly_listed';
   }
 

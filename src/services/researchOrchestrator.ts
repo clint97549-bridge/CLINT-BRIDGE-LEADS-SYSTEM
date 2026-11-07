@@ -38,6 +38,8 @@ export interface RunOptions {
   requireHiring?: boolean;
   requiredContactDetails?: 'any' | 'phone_only' | 'email_only' | 'both';
   opportunityType?: string;
+  onlyGenuineEcommerce?: boolean;
+  ecommerceWebsiteOpportunitiesOnly?: boolean;
   existingDuplicateKeys?: string[];
   contactedKeys?: string[];
   suppressedDomains?: string[];
@@ -257,6 +259,8 @@ export async function executeResearchRun(options: RunOptions): Promise<Orchestra
               requireHiring: options.requireHiring,
               requiredContactDetails: options.requiredContactDetails,
               opportunityType: options.opportunityType,
+              onlyGenuineEcommerce: options.onlyGenuineEcommerce,
+              ecommerceWebsiteOpportunitiesOnly: options.ecommerceWebsiteOpportunitiesOnly,
             });
 
             if (qc.passed) {
