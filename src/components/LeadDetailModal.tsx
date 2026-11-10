@@ -323,6 +323,64 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
             </div>
           </div>
 
+          {/* E-Commerce Intelligence & Store Audit Card (Part C) */}
+          {(lead.businessType || lead.ecommerceCategory || lead.opportunityType === 'ecommerce' || lead.storeFunctionalityStatus) && (
+            <div className="rounded-xl border border-purple-500/40 bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950 p-5 space-y-3.5">
+              <div className="flex items-center justify-between pb-2 border-b border-purple-900/40">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-purple-400" />
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider font-['Plus_Jakarta_Sans']">
+                    E-Commerce Intelligence &amp; Store Audit
+                  </h3>
+                </div>
+                <span className="text-[10px] font-mono text-purple-300 bg-purple-950/60 border border-purple-700/50 rounded-full px-2.5 py-0.5 font-bold">
+                  {lead.businessType ? lead.businessType.replace(/_/g, ' ').toUpperCase() : 'ONLINE COMMERCE'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-2.5">
+                  <div className="text-[10px] text-slate-400">Business Classification</div>
+                  <div className="font-semibold text-white capitalize mt-0.5">
+                    {lead.businessType ? lead.businessType.replace(/_/g, ' ') : 'Brand'}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-2.5">
+                  <div className="text-[10px] text-slate-400">Store Functionality</div>
+                  <div className="font-semibold text-amber-300 capitalize mt-0.5">
+                    {lead.storeFunctionalityStatus ? lead.storeFunctionalityStatus.replace(/_/g, ' ') : 'Not Tested'}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-2.5">
+                  <div className="text-[10px] text-slate-400">Product Catalogue</div>
+                  <div className="font-semibold text-cyan-300 capitalize mt-0.5">
+                    {lead.productCatalogueStatus ? lead.productCatalogueStatus.replace(/_/g, ' ') : 'Not Tested'}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-2.5">
+                  <div className="text-[10px] text-slate-400">Mobile Shopping</div>
+                  <div className="font-semibold text-emerald-300 capitalize mt-0.5">
+                    {lead.mobileExperience ? lead.mobileExperience.replace(/_/g, ' ') : 'Not Tested'}
+                  </div>
+                </div>
+              </div>
+
+              {lead.onlineSellingEvidence && (
+                <div className="rounded-lg border border-purple-900/30 bg-purple-950/20 p-3 text-xs">
+                  <div className="text-[10px] font-bold text-purple-300 uppercase tracking-wider mb-1">
+                    Online Selling Evidence Detected
+                  </div>
+                  <div className="text-slate-300 leading-relaxed font-mono text-[11px]">
+                    {lead.onlineSellingEvidence}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Executive Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Business Problem */}

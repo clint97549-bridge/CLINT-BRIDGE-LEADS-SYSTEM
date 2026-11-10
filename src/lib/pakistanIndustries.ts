@@ -780,7 +780,8 @@ export function isECommerceNiche(niche?: string): boolean {
  */
 export function classifyECommerceBusinessType(
   candidate: any,
-  siteAudit?: any
+  siteAudit?: any,
+  additionalSnippet?: string
 ): {
   businessType: ECommerceBusinessType;
   evidence: string;
@@ -789,12 +790,14 @@ export function classifyECommerceBusinessType(
   mobileStatus: MobileExperienceStatus;
   isGenuine: boolean;
 } {
-  const snippet = `${candidate.companyName || ''} ${candidate.rawSnippet || ''} ${candidate.sourceTitle || ''} ${candidate.website || ''}`.toLowerCase();
-  const hasWebsite = Boolean(candidate.website && candidate.website !== 'No Website Found' && !candidate.website.includes('example.com'));
+  const snippet = `${candidate.companyName || ''} ${candidate.rawSnippet || ''} ${candidate.sourceTitle || ''} ${candidate.website || ''} ${additionalSnippet || ''}`.toLowerCase();
+  const websiteStr = (candidate.website || '').toLowerCase();
+  const isSocialOnlyUrl = websiteStr.includes('instagram.com') || websiteStr.includes('facebook.com') || websiteStr.includes('wa.me');
+  const hasWebsite = Boolean(candidate.website && candidate.website !== 'No Website Found' && !candidate.website.includes('example.com') && !isSocialOnlyUrl);
   const hasStoreAudit = Boolean(siteAudit?.ecommerceStorefrontDetected);
-  const hasInstagram = Boolean(candidate.instagram && candidate.instagram !== 'Not Found');
-  const hasFacebook = Boolean(candidate.facebook && candidate.facebook !== 'Not Found');
-  const hasWhatsApp = Boolean(candidate.whatsapp || (candidate.phone && String(candidate.phone).startsWith('03')));
+  const hasInstagram = Boolean(candidate.instagram && candidate.instagram !== 'Not Found') || websiteStr.includes('instagram.com') || snippet.includes('instagram');
+  const hasFacebook = Boolean(candidate.facebook && candidate.facebook !== 'Not Found') || websiteStr.includes('facebook.com') || snippet.includes('facebook');
+  const hasWhatsApp = Boolean(candidate.whatsapp || (candidate.phoneNumber && String(candidate.phoneNumber).startsWith('03')) || (candidate.phone && String(candidate.phone).startsWith('03')));
 
   // Check for explicit e-commerce signals
   const hasOnlineSellingSignals =
@@ -802,6 +805,7 @@ export function classifyECommerceBusinessType(
     snippet.includes('cod') ||
     snippet.includes('delivery across pakistan') ||
     snippet.includes('nationwide delivery') ||
+    snippet.includes('nationwide shipping') ||
     snippet.includes('add to cart') ||
     snippet.includes('shop online') ||
     snippet.includes('order online') ||
@@ -833,7 +837,7 @@ export function classifyECommerceBusinessType(
 
   // Check if physical retailer only without online selling
   const isPhysicalRetailOnly =
-    (snippet.includes('walk-in') || snippet.includes('physical store') || snippet.includes('shopping mall')) &&
+    (snippet.includes('walk-in') || snippet.includes('physical store') || snippet.includes('shopping mall') || snippet.includes('wholesale') || snippet.includes('market shop')) &&
     !hasOnlineSellingSignals &&
     !hasWebsite &&
     !hasInstagram;

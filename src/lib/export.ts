@@ -74,7 +74,14 @@ export function mapLeadToRow(lead: Lead): Record<string, string | number> {
     'Research Date': escapeFormula(lead.researchDate || new Date().toISOString().split('T')[0]),
     'Lead Strength': escapeFormula(lead.leadStrength),
     'Lead Score': lead.leadScore,
-    'Notes': escapeFormula(lead.notes || ''),
+    'Notes': escapeFormula(
+      [
+        lead.notes,
+        lead.businessType ? `[E-Commerce: ${lead.businessType} | Store: ${lead.storeFunctionalityStatus || 'N/A'}${lead.onlineSellingEvidence ? ' | Evidence: ' + lead.onlineSellingEvidence : ''}]` : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+    ),
   };
 }
 
@@ -262,7 +269,14 @@ export function mapLeadToClientBridgeRow(lead: Lead): Record<string, string | nu
     'Source URLs': escapeFormula(lead.sourceUrl || lead.source || ''),
     'Research Date': escapeFormula(lead.researchDate || new Date().toISOString().split('T')[0]),
     'Verification Status': escapeFormula(lead.verificationStatus || (website ? 'Verified' : 'Publicly Listed')),
-    'Notes': escapeFormula(lead.notes || ''),
+    'Notes': escapeFormula(
+      [
+        lead.notes,
+        lead.businessType ? `[E-Commerce: ${lead.businessType} | Store: ${lead.storeFunctionalityStatus || 'N/A'}${lead.onlineSellingEvidence ? ' | Evidence: ' + lead.onlineSellingEvidence : ''}]` : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+    ),
   };
 }
 
@@ -344,5 +358,106 @@ export function generateClientBridgeCsvString(leads: Lead[]): string {
   const rows = leads.map(mapLeadToClientBridgeRow);
   const ws = XLSX.utils.json_to_sheet(rows, { header: [...CLIENT_BRIDGE_PAKISTAN_COLUMNS] });
   return XLSX.utils.sheet_to_csv(ws);
+}
+
+/**
+ * Dedicated E-Commerce Intelligence Columns
+ */
+export const ECOMMERCE_EXPORT_COLUMNS = [
+  'Company Name',
+  'Business Type',
+  'E-Commerce Category',
+  'Store Functionality',
+  'Product Catalogue',
+  'Mobile Experience',
+  'Online Selling Evidence',
+  'Website',
+  'Website Status',
+  'Public Business Email',
+  'Public Phone',
+  'WhatsApp Status',
+  'City',
+  'Region',
+  'Country',
+  'Lead Score',
+  'Lead Grade',
+  'Opportunity Type',
+  'Identified Problem',
+  'Recommended Service',
+  'Source URLs',
+  'Research Date',
+] as const;
+
+export function mapLeadToEcommerceRow(lead: Lead): Record<string, string | number> {
+  const rawEmail = lead.businessEmail && lead.businessEmail !== 'Not Found' ? lead.businessEmail : '';
+  const rawPhone = lead.phoneNumber && lead.phoneNumber !== 'Not Found' ? String(lead.phoneNumber) : '';
+  const website = lead.website && lead.website !== 'No Website Found' ? lead.website : '';
+
+  return {
+    'Company Name': escapeFormula(lead.companyName || ''),
+    'Business Type': escapeFormula(lead.businessType || 'ecommerce_brand'),
+    'E-Commerce Category': escapeFormula(lead.ecommerceCategory || lead.industry || 'Clothing & Fashion'),
+    'Store Functionality': escapeFormula(lead.storeFunctionalityStatus || 'no_store'),
+    'Product Catalogue': escapeFormula(lead.productCatalogueStatus || 'social_feed_only'),
+    'Mobile Experience': escapeFormula(lead.mobileExperience || 'not_tested'),
+    'Online Selling Evidence': escapeFormula(lead.onlineSellingEvidence || 'Not Found'),
+    'Website': escapeFormula(website || 'No Website Found'),
+    'Website Status': escapeFormula(lead.websiteStatus || 'Unknown'),
+    'Public Business Email': escapeFormula(rawEmail || ''),
+    'Public Phone': escapeFormula(rawPhone || ''),
+    'WhatsApp Status': escapeFormula(lead.whatsAppStatus || 'Unknown'),
+    'City': escapeFormula(lead.city || 'Unknown'),
+    'Region': escapeFormula(lead.region || 'Unknown'),
+    'Country': escapeFormula(lead.country || 'Pakistan'),
+    'Lead Score': lead.leadScore,
+    'Lead Grade': escapeFormula(lead.leadGrade || (lead.leadScore >= 90 ? 'A+' : lead.leadScore >= 80 ? 'A' : lead.leadScore >= 65 ? 'B' : 'C')),
+    'Opportunity Type': escapeFormula(lead.opportunityType || 'ecommerce'),
+    'Identified Problem': escapeFormula(lead.identifiedProblem || lead.businessProblem || 'Store gap identified'),
+    'Recommended Service': escapeFormula(lead.recommendedService || lead.salesOpportunity || 'E-Commerce Store & Automated COD Checkout'),
+    'Source URLs': escapeFormula(lead.sourceUrl || lead.source || ''),
+    'Research Date': escapeFormula(lead.researchDate || new Date().toISOString().split('T')[0]),
+  };
+}
+
+export function buildEcommerceWorkbook(
+  leads: Lead[],
+  runInfo?: Partial<ResearchRun>,
+  sheetTitle: string = 'E-Commerce Brands'
+): XLSX.WorkBook {
+  const wb = XLSX.utils.book_new();
+  const rows = leads.map(mapLeadToEcommerceRow);
+
+  const ws = XLSX.utils.json_to_sheet(rows, {
+    header: [...ECOMMERCE_EXPORT_COLUMNS],
+  });
+
+  // Preserve leading zeros on Public Phone
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+  const phoneColIndex = ECOMMERCE_EXPORT_COLUMNS.indexOf('Public Phone');
+  if (phoneColIndex >= 0) {
+    for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+      const cellAddress = XLSX.utils.encode_cell({ r: R, c: phoneColIndex });
+      if (ws[cellAddress]) {
+        const rowIdx = R - (range.s.r + 1);
+        const originalPhone = String(rows[rowIdx]?.['Public Phone'] ?? '');
+        ws[cellAddress].v = originalPhone;
+        ws[cellAddress].w = originalPhone;
+        ws[cellAddress].t = 's';
+        ws[cellAddress].z = '@';
+      }
+    }
+  }
+
+  ws['!cols'] = ECOMMERCE_EXPORT_COLUMNS.map((col) => {
+    if (col === 'Company Name' || col === 'Online Selling Evidence') return { wch: 30 };
+    if (col === 'Business Type' || col === 'E-Commerce Category' || col === 'Store Functionality') return { wch: 22 };
+    if (col === 'Public Phone' || col === 'Public Business Email') return { wch: 22 };
+    if (col === 'Identified Problem' || col === 'Recommended Service') return { wch: 35 };
+    return { wch: 16 };
+  });
+
+  ws['!autofilter'] = { ref: ws['!ref'] || 'A1' };
+  XLSX.utils.book_append_sheet(wb, ws, sheetTitle.substring(0, 31));
+  return wb;
 }
 

@@ -6,6 +6,7 @@
  */
 
 import assert from 'assert';
+import * as fs from 'fs';
 import * as XLSX from 'xlsx';
 import {
   escapeFormula,
@@ -65,12 +66,18 @@ import {
   determineOpportunityType,
   generateClientBridgeRecommendation,
   evaluateContactAccuracyStatus,
+  classifyECommerceBusinessType,
+  isECommerceNiche,
+  PAKISTAN_ECOMMERCE_CATEGORIES,
 } from '../src/lib/pakistanIndustries';
 import {
   buildClientBridgeWorkbook,
   generateClientBridgeCsvString,
   CLIENT_BRIDGE_PAKISTAN_COLUMNS,
   mapLeadToClientBridgeRow,
+  ECOMMERCE_EXPORT_COLUMNS,
+  buildEcommerceWorkbook,
+  mapLeadToEcommerceRow,
 } from '../src/lib/export';
 
 async function runTests() {
@@ -2279,7 +2286,191 @@ async function runTests() {
   assert.strictEqual(emailAccuracyVerified, 'technically_verified', 'Verified email must be technically_verified');
   console.log('✓ Test 112 Passed: Contact Accuracy Status Evaluation Verified');
 
-  console.log('=== ALL TESTS PASSED SUCCESSFULLY! (112/112) ===');
+  // Test 113: Pakistan + Clothing Brands Natural Query Generation & Planner Routing
+  const ecomPlan = createSearchPlan(
+    'Pakistan',
+    'Clothing and Fashion Brands',
+    'Karachi',
+    10,
+    { subNiche: "Women's clothing brands" }
+  );
+  assert(ecomPlan.queries.length > 0, 'E-commerce search plan must generate queries');
+  for (const q of ecomPlan.queries) {
+    assert.strictEqual(
+      q.query.includes('agency') || q.query.includes('services in'),
+      false,
+      `E-commerce query "${q.query}" must not contain "agency" or "services in"`
+    );
+  }
+  const hasOnlineOrShopping = ecomPlan.queries.some(
+    (q) =>
+      q.query.toLowerCase().includes('online') ||
+      q.query.toLowerCase().includes('brand') ||
+      q.query.toLowerCase().includes('store') ||
+      q.query.toLowerCase().includes('order')
+  );
+  assert.strictEqual(hasOnlineOrShopping, true, 'Queries must contain natural retail commerce keywords');
+  console.log('✓ Test 113 Passed: Pakistan E-Commerce Natural Query Generation Verified');
+
+  // Test 114: E-Commerce Category & Subcategory Mapping (Part C.2)
+  assert.strictEqual(PAKISTAN_ECOMMERCE_CATEGORIES.length, 7, 'Must define 7 dedicated e-commerce categories');
+  assert.strictEqual(isECommerceNiche('Clothing and Fashion Brands'), true);
+  assert.strictEqual(isECommerceNiche('Footwear Brands'), true);
+  assert.strictEqual(isECommerceNiche('Beauty and Personal Care Brands'), true);
+  assert.strictEqual(isECommerceNiche('Electronics and Gadgets'), true);
+  assert.strictEqual(isECommerceNiche('Home and Lifestyle Brands'), true);
+  assert.strictEqual(isECommerceNiche('Dentist'), false);
+  console.log('✓ Test 114 Passed: E-Commerce Category & Subcategory Mapping Verified');
+
+  // Test 115: E-Commerce Business Type Classification
+  const socialCandidate: CandidateBusiness = {
+    companyName: 'Gul Ahmed Silk Studio',
+    website: 'https://instagram.com/gulahmedsilk',
+    city: 'Karachi',
+    country: 'Pakistan',
+    phoneNumber: '03001234567',
+    sourceProvider: 'google_search_grounding',
+    sourceType: 'business_website',
+    sourceUrl: 'https://instagram.com/gulahmedsilk',
+  };
+  const socialType = classifyECommerceBusinessType(socialCandidate, null, 'DM to order cash on delivery nationwide shipping');
+  assert.strictEqual(socialType.businessType, 'social_commerce_brand', 'Instagram brand with COD & DM orders must be classified as social_commerce_brand');
+
+  const storeCandidate: CandidateBusiness = {
+    companyName: 'J. Luxury Apparel',
+    website: 'https://jluxuryapparel.pk',
+    city: 'Lahore',
+    country: 'Pakistan',
+    phoneNumber: '03211234567',
+    sourceProvider: 'google_search_grounding',
+    sourceType: 'business_website',
+    sourceUrl: 'https://jluxuryapparel.pk',
+  };
+  const storeType = classifyECommerceBusinessType(storeCandidate, {
+    url: 'https://jluxuryapparel.pk',
+    isReachable: true,
+    ecommerceStorefrontDetected: true,
+    hasCartOrCheckout: true,
+    hasCodPayment: true,
+    detectedPlatform: 'Shopify',
+    hasNationwideDelivery: true,
+  });
+  assert.strictEqual(storeType.businessType, 'ecommerce_brand', 'Store with Shopify cart and COD must be classified as ecommerce_brand');
+
+  const physicalCandidate: CandidateBusiness = {
+    companyName: 'Bismillah General Fabric Wholesale Shop',
+    website: '',
+    city: 'Faisalabad',
+    country: 'Pakistan',
+    phoneNumber: '0412345678',
+    sourceProvider: 'google_places',
+    sourceType: 'business_website',
+    sourceUrl: 'https://google.com/maps',
+  };
+  const physicalType = classifyECommerceBusinessType(physicalCandidate, null, 'Wholesale cloth market shop no 4');
+  assert.strictEqual(physicalType.businessType, 'physical_retailer_only', 'Physical wholesale shop with no online sales must be classified as physical_retailer_only');
+  console.log('✓ Test 115 Passed: E-Commerce Business Type Classification Verified');
+
+  // Test 116: Dedicated E-Commerce 100-Point Scoring Model (Part C.6)
+  const socialEcomScore = calculateLeadScore({
+    hasValidBusinessName: true,
+    nicheMatched: true,
+    countryMatched: true,
+    websiteStatus: 'No Website Found',
+    hasWebsite: false,
+    emailStatus: 'Not Found',
+    phoneStatus: 'Verified/Public',
+    hasDecisionMakerName: false,
+    hasRecentNeedSignal: true,
+    evidenceCount: 3,
+    hasEvidenceUrl: true,
+    hasOperationalVerification: true,
+    hasSocialProfiles: true,
+    isEcommerce: true,
+    businessType: 'social_commerce_brand',
+    storeFunctionalityStatus: 'dm_ordering_only',
+    onlineSellingEvidence: 'Cash on delivery nationwide, 45k Instagram followers',
+  });
+  assert(socialEcomScore.score >= 80, `Active social commerce brand without official website must score Grade A/A+ (got ${socialEcomScore.score})`);
+  assert.strictEqual(socialEcomScore.strength, 'A', 'Social seller needing web dev must be Grade A');
+  console.log('✓ Test 116 Passed: Dedicated E-Commerce 100-Point Scoring Model Verified');
+
+  // Test 117: Strict QC Filter Verification (onlyGenuineEcommerce & ecommerceWebsiteOpportunitiesOnly)
+  const fakeEcomLead: Lead = {
+    ...sampleLeadPk,
+    companyName: 'Anarkali Physical Fabric Depot',
+    businessType: 'physical_retailer_only',
+    storeFunctionalityStatus: 'no_store',
+    website: '',
+    websiteStatus: 'No Website Found',
+  };
+  const qcGenuineDrop = performQualityControl(
+    fakeEcomLead,
+    new Set(),
+    new Set(),
+    new Set(),
+    { requestedCountry: 'Pakistan', requestedNiche: 'Clothing and Fashion Brands', minimumScore: 50, onlyGenuineEcommerce: true }
+  );
+  assert.strictEqual(qcGenuineDrop.passed, false, 'onlyGenuineEcommerce must reject physical_retailer_only leads');
+
+  const genuineSocialLead: Lead = {
+    ...sampleLeadPk,
+    companyName: 'Aura Pret Studio',
+    businessType: 'social_commerce_brand',
+    storeFunctionalityStatus: 'dm_ordering_only',
+    website: '',
+    websiteStatus: 'No Website Found',
+    onlineSellingEvidence: 'Instagram DM ordering, COD delivery across Pakistan',
+    leadStrength: 'A',
+    leadScore: 88,
+  };
+  const qcGenuinePass = performQualityControl(
+    genuineSocialLead,
+    new Set(),
+    new Set(),
+    new Set(),
+    { requestedCountry: 'Pakistan', requestedNiche: 'Clothing and Fashion Brands', minimumScore: 50, onlyGenuineEcommerce: true, ecommerceWebsiteOpportunitiesOnly: true }
+  );
+  assert.strictEqual(qcGenuinePass.passed, true, 'onlyGenuineEcommerce & ecommerceWebsiteOpportunitiesOnly must pass genuine social brand without website');
+
+  const optimizedStoreLead: Lead = {
+    ...sampleLeadPk,
+    companyName: 'Khaadi Official Online',
+    businessType: 'ecommerce_brand',
+    storeFunctionalityStatus: 'fully_functional',
+    website: 'https://khaadi.com',
+    websiteStatus: 'Active',
+    mobileExperience: 'optimized',
+    leadStrength: 'B',
+    leadScore: 65,
+  };
+  const qcWebDevGapDrop = performQualityControl(
+    optimizedStoreLead,
+    new Set(),
+    new Set(),
+    new Set(),
+    { requestedCountry: 'Pakistan', requestedNiche: 'Clothing and Fashion Brands', minimumScore: 50, ecommerceWebsiteOpportunitiesOnly: true }
+  );
+  assert.strictEqual(qcWebDevGapDrop.passed, false, 'ecommerceWebsiteOpportunitiesOnly must drop already fully-optimized stores');
+  console.log('✓ Test 117 Passed: Strict QC Filter Verification Verified');
+
+  // Test 118: GitHub Actions CI/CD Deployment & Packaging Integrity
+  const hasLockfile = fs.existsSync('package-lock.json');
+  assert.strictEqual(hasLockfile, true, 'package-lock.json must exist in project root for GitHub Actions npm ci');
+
+  const deployWorkflow = fs.readFileSync('.github/workflows/deploy.yml', 'utf8');
+  assert(deployWorkflow.includes('actions/setup-node@v4'), 'Workflow must use setup-node@v4');
+  assert(deployWorkflow.includes('npm run build'), 'Workflow must run npm run build');
+  assert(deployWorkflow.includes('dist/.nojekyll'), 'Workflow must ensure dist/.nojekyll exists');
+
+  // Verify E-Commerce Excel Export Workbook
+  const ecomWb = buildEcommerceWorkbook([genuineSocialLead], { runId: 'run_ecom_test' });
+  assert(ecomWb.SheetNames.includes('E-Commerce Brands'), 'Workbook must contain E-Commerce Brands sheet');
+  const ecomWs = ecomWb.Sheets['E-Commerce Brands'];
+  assert(Boolean(ecomWs), 'Sheet must be accessible');
+  console.log('✓ Test 118 Passed: GitHub Actions Deployment & Packaging Integrity Verified');
+
+  console.log('=== ALL TESTS PASSED SUCCESSFULLY! (118/118) ===');
   process.exit(0);
 }
 

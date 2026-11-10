@@ -105,6 +105,8 @@ export function performQualityControl(
     requireHiring?: boolean;
     requiredContactDetails?: 'any' | 'phone_only' | 'email_only' | 'both';
     opportunityType?: string;
+    onlyGenuineEcommerce?: boolean;
+    ecommerceWebsiteOpportunitiesOnly?: boolean;
   },
   suppressedPhones?: Set<string>,
   suppressedCompanies?: Set<string>,
@@ -469,18 +471,24 @@ export function performQualityControl(
 
   // User qualification control: E-Commerce Brands with Website Opportunities (Part C.9)
   if (options.ecommerceWebsiteOpportunitiesOnly) {
+    const isAlreadyOptimizedStore =
+      lead.storeFunctionalityStatus === 'fully_functional' &&
+      lead.websiteStatus === 'Active' &&
+      lead.mobileExperience === 'optimized';
+
     const hasWebsiteGap =
-      lead.websiteStatus === 'No Website Found' ||
-      lead.websiteStatus === 'Broken' ||
-      lead.websiteStatus === 'Unreachable' ||
-      lead.websiteStatus === 'Active but Weak' ||
-      lead.websiteStatus === 'Outdated Indicators' ||
-      lead.storeFunctionalityStatus === 'dm_ordering_only' ||
-      lead.storeFunctionalityStatus === 'catalog_only_no_checkout' ||
-      lead.storeFunctionalityStatus === 'broken_checkout' ||
-      lead.opportunityType === 'new_website' ||
-      lead.opportunityType === 'website_redesign' ||
-      lead.opportunityType === 'ecommerce';
+      !isAlreadyOptimizedStore &&
+      (lead.websiteStatus === 'No Website Found' ||
+        lead.websiteStatus === 'Broken' ||
+        lead.websiteStatus === 'Unreachable' ||
+        lead.websiteStatus === 'Active but Weak' ||
+        lead.websiteStatus === 'Outdated Indicators' ||
+        lead.storeFunctionalityStatus === 'dm_ordering_only' ||
+        lead.storeFunctionalityStatus === 'catalog_only_no_checkout' ||
+        lead.storeFunctionalityStatus === 'broken_checkout' ||
+        lead.opportunityType === 'new_website' ||
+        lead.opportunityType === 'website_redesign' ||
+        lead.opportunityType === 'ecommerce');
 
     if (!hasWebsiteGap) {
       return {

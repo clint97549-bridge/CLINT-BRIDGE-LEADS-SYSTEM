@@ -381,6 +381,7 @@ export interface CandidateBusiness {
   companyName: string;
   website?: string;
   phone?: string;
+  phoneNumber?: string;
   address?: string;
   city?: string;
   region?: string;
@@ -400,6 +401,8 @@ export interface CandidateBusiness {
   onlineSellingEvidence?: string;
   // Step 6 & 9: Deterministic Candidate Provenance
   discoveryProvider?: string;
+  sourceProvider?: string;
+  sourceType?: LeadSourceType;
   discoverySource?: string;
   discoverySourceUrl?: string;
   discoveryTimestamp?: string;

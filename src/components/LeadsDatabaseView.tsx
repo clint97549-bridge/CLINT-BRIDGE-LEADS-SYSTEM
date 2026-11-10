@@ -73,6 +73,8 @@ export const LeadsDatabaseView: React.FC<LeadsDatabaseViewProps> = ({
   const [filterMissingWebsite, setFilterMissingWebsite] = useState(false);
   const [filterMissingBooking, setFilterMissingBooking] = useState(false);
   const [filterMissingEcommerce, setFilterMissingEcommerce] = useState(false);
+  const [filterGenuineEcommerce, setFilterGenuineEcommerce] = useState(false);
+  const [filterEcommerceGaps, setFilterEcommerceGaps] = useState(false);
   const [showIndustryMenu, setShowIndustryMenu] = useState(false);
   const [minScore, setMinScore] = useState<number>(0);
   const [sortBy, setSortBy] = useState<'score' | 'company' | 'date'>('score');
@@ -244,6 +246,27 @@ export const LeadsDatabaseView: React.FC<LeadsDatabaseViewProps> = ({
       if (filterContacted === 'contacted' && !lead.contacted) return false;
       if (filterContacted === 'uncontacted' && lead.contacted) return false;
 
+      // Dedicated E-Commerce Filters
+      if (filterGenuineEcommerce) {
+        const isEcom =
+          lead.isGenuineEcommerce ||
+          lead.businessType === 'ecommerce_brand' ||
+          lead.businessType === 'social_commerce_brand' ||
+          lead.businessType === 'online_retailer' ||
+          lead.businessType === 'manufacturer_with_online_sales';
+        if (!isEcom) return false;
+      }
+
+      if (filterEcommerceGaps) {
+        const hasGap =
+          lead.opportunityType === 'ecommerce' ||
+          lead.storeFunctionalityStatus === 'catalog_only_no_checkout' ||
+          lead.storeFunctionalityStatus === 'dm_ordering_only' ||
+          lead.storeFunctionalityStatus === 'broken_checkout' ||
+          lead.websiteStatus === 'No Website Found';
+        if (!hasGap) return false;
+      }
+
       // Min Score
       if (lead.leadScore < minScore) return false;
 
@@ -260,6 +283,8 @@ export const LeadsDatabaseView: React.FC<LeadsDatabaseViewProps> = ({
     filterMissingWebsite,
     filterMissingBooking,
     filterMissingEcommerce,
+    filterGenuineEcommerce,
+    filterEcommerceGaps,
     filterReviewStatus,
     filterStrength,
     filterCountry,
@@ -637,7 +662,27 @@ export const LeadsDatabaseView: React.FC<LeadsDatabaseViewProps> = ({
           >
             Missing E-Commerce Store
           </button>
-          {(filterIndustry !== 'ALL' || filterCity !== 'ALL' || filterGrade !== 'ALL' || filterOpportunityType !== 'ALL' || filterMissingWebsite || filterMissingBooking || filterMissingEcommerce) && (
+          <button
+            onClick={() => setFilterGenuineEcommerce(!filterGenuineEcommerce)}
+            className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${
+              filterGenuineEcommerce
+                ? 'bg-purple-600/40 text-purple-200 border border-purple-500/60 shadow-sm shadow-purple-500/20'
+                : 'bg-slate-800/80 text-slate-400 hover:text-slate-200 border border-slate-700/50'
+            }`}
+          >
+            Genuine E-Commerce Brands
+          </button>
+          <button
+            onClick={() => setFilterEcommerceGaps(!filterEcommerceGaps)}
+            className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${
+              filterEcommerceGaps
+                ? 'bg-indigo-600/40 text-indigo-200 border border-indigo-500/60 shadow-sm shadow-indigo-500/20'
+                : 'bg-slate-800/80 text-slate-400 hover:text-slate-200 border border-slate-700/50'
+            }`}
+          >
+            Store / Website Gaps Only
+          </button>
+          {(filterIndustry !== 'ALL' || filterCity !== 'ALL' || filterGrade !== 'ALL' || filterOpportunityType !== 'ALL' || filterMissingWebsite || filterMissingBooking || filterMissingEcommerce || filterGenuineEcommerce || filterEcommerceGaps) && (
             <button
               onClick={() => {
                 setFilterIndustry('ALL');
@@ -647,6 +692,8 @@ export const LeadsDatabaseView: React.FC<LeadsDatabaseViewProps> = ({
                 setFilterMissingWebsite(false);
                 setFilterMissingBooking(false);
                 setFilterMissingEcommerce(false);
+                setFilterGenuineEcommerce(false);
+                setFilterEcommerceGaps(false);
                 setPage(1);
               }}
               className="text-[11px] text-blue-400 hover:underline ml-auto"
@@ -867,6 +914,52 @@ export const LeadsDatabaseView: React.FC<LeadsDatabaseViewProps> = ({
                               }`}
                             >
                               {lead.complianceReviewStatus}
+                            </span>
+                          )}
+                          {lead.businessType && lead.businessType !== 'unknown_business_type' && (
+                            <span
+                              className={`inline-flex items-center px-1.5 py-0.2 rounded text-[8px] font-bold uppercase tracking-wider ${
+                                lead.businessType === 'ecommerce_brand'
+                                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
+                                  : lead.businessType === 'social_commerce_brand'
+                                  ? 'bg-pink-500/20 text-pink-300 border border-pink-500/40'
+                                  : lead.businessType === 'online_retailer'
+                                  ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                                  : 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                              }`}
+                            >
+                              {lead.businessType === 'ecommerce_brand'
+                                ? 'E-Com Brand'
+                                : lead.businessType === 'social_commerce_brand'
+                                ? 'Social Seller'
+                                : lead.businessType === 'online_retailer'
+                                ? 'Online Retailer'
+                                : 'D2C Maker'}
+                            </span>
+                          )}
+                          {lead.storeFunctionalityStatus && lead.storeFunctionalityStatus !== 'not_tested' && (
+                            <span
+                              className={`inline-flex items-center px-1.5 py-0.2 rounded text-[8px] font-medium ${
+                                lead.storeFunctionalityStatus === 'catalog_only_no_checkout'
+                                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                                  : lead.storeFunctionalityStatus === 'dm_ordering_only'
+                                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                                  : lead.storeFunctionalityStatus === 'broken_checkout'
+                                  ? 'bg-red-500/20 text-red-300 border border-red-500/40'
+                                  : lead.storeFunctionalityStatus === 'no_store'
+                                  ? 'bg-slate-700/50 text-slate-300 border border-slate-600/40'
+                                  : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                              }`}
+                            >
+                              {lead.storeFunctionalityStatus === 'catalog_only_no_checkout'
+                                ? 'Catalog (No Cart)'
+                                : lead.storeFunctionalityStatus === 'dm_ordering_only'
+                                ? 'DM Orders'
+                                : lead.storeFunctionalityStatus === 'broken_checkout'
+                                ? 'Broken Cart'
+                                : lead.storeFunctionalityStatus === 'no_store'
+                                ? 'No Store'
+                                : 'Full Store'}
                             </span>
                           )}
                         </div>

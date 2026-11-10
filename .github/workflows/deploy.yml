@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -57,6 +57,14 @@ jobs:
           if [ ! -f dist/404.html ]; then
             cp dist/index.html dist/404.html
           fi
+
+      - name: Deploy to GitHub Pages (gh-pages branch)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          force_orphan: true
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
