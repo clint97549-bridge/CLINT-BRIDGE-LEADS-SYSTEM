@@ -1,0 +1,936 @@
+# LEADPULSE AI — ULTIMATE MULTI-COUNTRY LEAD GENERATION & QUALIFICATION MASTER PROMPT
+
+## ROLE
+
+Act as a senior full-stack software engineer, SaaS architect, data-engineering specialist, lead-generation researcher, QA engineer, and privacy/compliance-aware product developer.
+
+You are working on my **existing LeadPulse AI application**. Your task is to upgrade the current application into a reliable multi-country B2B lead-generation platform for my web design and digital marketing agency, **Client Bridge**.
+
+This is an implementation task, not just a planning or explanation task. Inspect the existing project, understand how it works, then implement the changes in the existing codebase.
+
+**Do not create a separate replacement app. Do not destroy or rewrite working functionality just to make the new features easier to add.**
+
+---
+
+# 1. PRIMARY OBJECTIVE
+
+The application must support these markets:
+
+1. Pakistan
+2. United Kingdom (UK)
+3. United States of America (USA)
+
+The user must be able to select:
+
+- Pakistan
+- United Kingdom
+- United States
+- UK + USA
+- All enabled markets
+
+The country selection must control the entire lead-generation workflow, including discovery, research, website analysis, qualification, scoring, phone formatting, duplicate checking, storage, filtering, and export.
+
+### Critical requirement: preserve Pakistan
+
+The existing Pakistan lead-generation functionality is already part of this project.
+
+- Keep Pakistan as an available market.
+- Preserve its existing workflow, settings, data, filters, and outputs.
+- Do not remove, weaken, or replace Pakistan-specific functionality.
+- Do not change Pakistani phone-number handling or remove leading zeroes from locally formatted numbers.
+- Do not mix UK or USA leads into Pakistan results.
+- Run Pakistan regression tests after every significant change.
+- If a shared component must be modified, maintain backward compatibility.
+
+**The new UK and USA functionality must be added without breaking the existing Pakistan workflow.**
+
+---
+
+# 2. FIRST: INSPECT THE ENTIRE EXISTING PROJECT
+
+Before changing code, inspect the actual codebase and identify:
+
+- Frontend framework and application structure.
+- Backend/API architecture.
+- Current country or location selection logic.
+- Lead discovery providers and API integrations.
+- Research and website-analysis services.
+- Lead scoring and qualification logic.
+- Duplicate-detection logic.
+- Database and persistence layer.
+- Authentication and user permissions.
+- Existing dashboards, filters, tables, and lead details.
+- CSV/XLSX export functionality.
+- Environment variables and API-key configuration.
+- Existing tests, logs, and error-handling mechanisms.
+
+Inspect the relevant files, including equivalent files if the exact names differ:
+
+- `src/lib/countries.ts`
+- `src/types/index.ts`
+- `discoveryProvider.ts`
+- `discoveryService.ts`
+- `researchService.ts`
+- `researchOrchestrator.ts`
+- `qcService.ts`
+- API route handlers
+- Database models and repositories
+- Frontend lead-generation forms
+- Lead table and detail components
+- Export utilities
+- Existing tests and configuration files
+
+These are examples, not assumptions. Find the real architecture first.
+
+Create a concise internal implementation checklist, then proceed with the implementation. Do not stop after producing a checklist or a technical explanation.
+
+---
+
+# 3. COUNTRY-AWARE ARCHITECTURE
+
+Build a country-aware architecture in which every generation request carries its own explicit market configuration.
+
+Use ISO-style internal country codes:
+
+- Pakistan: `PK`
+- United Kingdom: `GB`
+- United States: `US`
+
+Display friendly country names in the user interface.
+
+Every lead and every generation run must contain a country/market identifier.
+
+### Important engineering rules
+
+- Never depend on a single mutable global country variable.
+- Pass the selected country explicitly through every service and API request.
+- A UK request must use UK location validation, research rules, phone formatting, and country metadata.
+- A USA request must use USA location validation, research rules, phone formatting, and country metadata.
+- A Pakistan request must continue using the existing Pakistan behaviour.
+- A combined UK + USA request must generate separately identified results for each market.
+- Make country-specific settings configurable rather than scattering country conditions throughout the code.
+- Keep provider credentials and secrets on the server side.
+
+### Combined-market behaviour
+
+When the user selects UK + USA:
+
+- Run independent UK and USA discovery jobs.
+- Give each market its own requested lead count.
+- Display separate UK and USA result groups.
+- Show separate market-level progress and result counts.
+- Apply country-specific validation and scoring.
+- Do not silently substitute leads from one country for another.
+- If one market fails, preserve successful results from the other market and display the failure clearly.
+
+---
+
+# 4. LOCATION SELECTION
+
+## United Kingdom
+
+Support all four UK nations:
+
+- England
+- Scotland
+- Wales
+- Northern Ireland
+
+Support:
+
+- Country-wide search
+- Nation-wide search
+- Region search
+- City/town search
+- Postcode-area search when supported by the configured provider
+- Multiple selected locations
+- Custom manually entered locations
+
+Examples of selectable locations include London, Manchester, Birmingham, Leeds, Liverpool, Bristol, Glasgow, Edinburgh, Cardiff, Belfast, Newcastle, Sheffield, Nottingham, and other valid UK locations.
+
+Do not restrict the user to only these examples. Permit custom valid UK locations.
+
+## United States
+
+Support:
+
+- All 50 US states
+- Washington, DC
+- Major cities
+- Counties and metropolitan areas when supported
+- ZIP code or ZIP-code-area searches when supported
+- Multiple selected states or cities
+- Custom manually entered locations
+- Nationwide USA searches
+
+Examples include New York, Los Angeles, Chicago, Houston, Phoenix, Dallas, Austin, Miami, Orlando, Atlanta, Seattle, Denver, Boston, San Diego, San Francisco, and other valid US locations.
+
+Do not limit discovery to these examples.
+
+## Pakistan
+
+Preserve the current Pakistan location workflow. Do not replace it with a UK or US location list.
+
+---
+
+# 5. BUSINESS NICHE AND INDUSTRY SELECTION
+
+Allow users to enter any custom business niche.
+
+Provide useful suggested categories, including:
+
+- Restaurants and cafes
+- Hotels and accommodation
+- Healthcare and dental clinics
+- Salons and beauty businesses
+- Gyms and fitness centres
+- Construction and contractors
+- Roofing and home improvement
+- Real estate agencies
+- Law firms and professional services
+- Accountants and financial services
+- Cleaning companies
+- Moving and logistics companies
+- Automotive services and repair shops
+- Retail stores
+- E-commerce brands
+- Manufacturing businesses
+- Wholesale and distribution
+- Education and training
+- Recruitment agencies
+- B2B service providers
+- Local trades and service businesses
+
+Also support custom niches that are not in the suggested list.
+
+The user must be able to specify:
+
+- Main niche
+- Optional sub-niche
+- Location
+- Number of leads wanted per selected market
+- Minimum qualification score
+- Website status preferences
+- Contact-information requirements
+
+Do not hardcode only one industry.
+
+---
+
+# 6. IDEAL CLIENT PROFILE FOR CLIENT BRIDGE
+
+The main purpose is to find businesses that may have a genuine, evidence-backed need for:
+
+- A new professional website
+- Website redesign
+- Mobile-responsive website development
+- E-commerce website development
+- Website speed and usability improvements
+- Landing pages
+- Local SEO
+- Search engine optimisation
+- Google Business Profile improvements
+- Social media marketing
+- Digital advertising
+- Lead-generation campaigns
+- Conversion-rate improvements
+- Ongoing digital marketing services
+
+Prioritise businesses that appear operational and commercially relevant but have identifiable online-presence or digital-marketing opportunities.
+
+Do not assume that a business needs a website simply because it has a small online presence.
+
+Do not label a business as interested in buying services unless there is actual evidence of that interest.
+
+The system identifies **potential opportunities**, not guaranteed customers.
+
+---
+
+# 7. REAL BUSINESS DISCOVERY
+
+Use only configured, accessible, and permitted data sources.
+
+Build a provider-adapter architecture so additional providers can be added without rewriting the application.
+
+Potential sources, when configured and permitted, may include:
+
+- Google Places API (official API)
+- Configured search APIs
+- Official business websites
+- UK Companies House API
+- Official US state business registries or other permitted public business registries
+- Public business directories whose terms permit the intended use
+- Public business profiles and social pages where access and use are permitted
+- Licensed business-data or enrichment providers
+
+### Provider rules
+
+- Do not scrape search-result pages or map interfaces in ways that violate provider terms.
+- Do not bypass login restrictions, CAPTCHAs, rate limits, or access controls.
+- Do not claim a provider is connected unless its credentials and integration actually work.
+- Respect API quotas, attribution requirements, storage restrictions, and provider terms.
+- Keep the source URL and source type for every important business fact.
+- Use pagination where available.
+- Handle provider timeouts, rate limits, and temporary failures.
+- Use retries with sensible limits and backoff.
+- Do not silently convert provider errors into fake successful results.
+- Make it clear when a source is unavailable or a result is only partially researched.
+
+A business must have enough evidence to establish that it is a real business in the requested market.
+
+---
+
+# 8. HIGH-INTENT OPPORTUNITY RESEARCH
+
+For every discovered business, perform research to identify actual, observable reasons it may benefit from web design or digital marketing.
+
+Investigate the following:
+
+## A. Website status
+
+Classify the website as one of:
+
+- No official website found after documented searches.
+- Official website confirmed.
+- Website inaccessible or repeatedly failing.
+- Domain expired or parked, where verifiable.
+- Website redirects incorrectly.
+- Website appears incomplete or broken.
+- Website has significant mobile usability problems.
+- Website has weak or missing contact/enquiry paths.
+- Website has possible e-commerce or conversion issues.
+- Website appears functional with no major issue identified.
+- Unable to determine.
+
+Never mark a website as missing just because one search query did not find it.
+
+When no website is found, record the search attempts or evidence supporting that conclusion.
+
+Do not confuse social-media pages, directory profiles, and third-party listing pages with an official business website.
+
+## B. Website quality
+
+When an official website exists, assess observable signals such as:
+
+- Mobile responsiveness
+- Page loading performance, when measurable
+- HTTPS/security configuration
+- Broken pages or visible errors
+- Missing or unclear calls to action
+- Missing contact information
+- Broken enquiry or booking journeys
+- Poor navigation
+- Outdated visible content
+- Missing key service pages
+- Weak local landing-page structure
+- Poor product or service presentation
+- E-commerce usability issues, where relevant
+
+Do not claim a technical defect unless the system actually tested or observed it.
+
+If performance testing is unavailable, mark it as `not_tested`, not as a failure.
+
+## C. Business growth signals
+
+Look for verifiable public signals such as:
+
+- New locations or branches
+- Recent expansion announcements
+- New products or services
+- New business openings
+- Publicly announced investment
+- Public hiring or recruitment activity
+- A business actively promoting a new service
+- Other credible public growth announcements
+
+Store the source URL and the date of the evidence.
+
+Do not invent hiring, investment, expansion, revenue, traffic, or customer-growth information.
+
+## D. Service-fit assessment
+
+Assess whether the business's industry and visible business model are a reasonable fit for the services offered by Client Bridge.
+
+Explain why the business may be a suitable prospect.
+
+Do not confuse a general industry match with proven purchasing intent.
+
+---
+
+# 9. LEAD SCORING — TRANSPARENT 100-POINT MODEL
+
+Implement a transparent scoring system. Every score must have an explanation and supporting evidence where applicable.
+
+Use this default weighting:
+
+| Factor | Maximum points |
+|---|---:|
+| Website absence, failure, or major weakness | 25 |
+| Website usability and conversion opportunities | 20 |
+| Credible business growth signals | 15 |
+| Public hiring or investment signals | 10 |
+| Business identity and operating-status evidence | 10 |
+| Public contact-information availability | 10 |
+| Fit with Client Bridge services | 10 |
+| **Total** | **100** |
+
+### Scoring rules
+
+- Award points only when supported by observed evidence.
+- Do not automatically give maximum points because a website is missing.
+- Do not award growth or hiring points without a credible source.
+- Do not award identity points without evidence that the business exists and operates.
+- Do not award contact points for guessed email addresses or invented phone numbers.
+- Record the reason for every positive and negative score.
+- Record when a factor could not be evaluated.
+- Avoid double-counting the same observation across multiple categories.
+
+### Lead grades
+
+- A: 80–100 — high-priority opportunity
+- B: 65–79 — good potential opportunity
+- C: 50–64 — needs further review
+- Below 50 — exclude from the default qualified-lead view
+
+Allow users to change the minimum score.
+
+### Lead intent labels
+
+Use careful labels:
+
+- `High opportunity evidence`
+- `Medium opportunity evidence`
+- `Low opportunity evidence`
+- `Insufficient evidence`
+
+Never call a lead `ready to buy`, `interested`, or `guaranteed client` unless direct, verifiable evidence supports that statement.
+
+---
+
+# 10. BUSINESS IDENTITY AND CONTACT VERIFICATION
+
+For every lead, collect only information that is genuinely available from permitted public sources.
+
+Possible fields:
+
+- Company/business name
+- Trading name, if publicly confirmed
+- Official website
+- Business category
+- Full business address
+- City
+- Region/state/nation
+- Postcode/ZIP code
+- Country
+- Public business phone
+- Public business email
+- Official contact page
+- Public social profile URLs
+- Business registry reference, where available
+- Source URLs
+- Research date
+- Verification status
+
+### Email rules — extremely important
+
+- Never generate or guess an email address.
+- Never assume `info@domain.com`, `sales@domain.com`, or any other common format exists.
+- Do not create an email using a person's name and company domain.
+- Only save an email when it is actually published by a credible public source or returned by a permitted, configured provider.
+- Store the exact source URL where the email was found.
+- Distinguish `publicly_listed` from `verified`.
+- An email is not technically verified merely because it looks correctly formatted.
+- Only label an email `technically_verified` when a legitimate, configured verification service returns that status.
+- If no email is found, leave it blank and record `not_found`.
+- Never invent a contact person's name, job title, email, or direct phone number.
+
+### Phone-number rules
+
+Keep both:
+
+- `phone_raw`: original publicly listed phone number
+- `phone_normalized`: normalized number, when confidently possible
+
+Country-specific handling:
+
+- UK: support the correct `+44` format.
+- USA: support the correct `+1` format and extensions.
+- Pakistan: preserve existing Pakistan formatting and leading-zero behaviour.
+
+Never manufacture a phone number or silently change an uncertain number.
+
+### Contact-source labels
+
+Use explicit values such as:
+
+- `official_website`
+- `official_registry`
+- `permitted_public_directory`
+- `licensed_provider`
+- `public_social_profile`
+- `not_found`
+- `not_verified`
+
+The user must be able to see where contact information came from.
+
+---
+
+# 11. COUNTRY-SPECIFIC DATA AND COMPLIANCE
+
+Build a compliance-awareness layer. This is a technical safeguard, not a substitute for legal advice.
+
+## UK — United Kingdom
+
+The UK workflow must distinguish:
+
+- Corporate subscribers, such as limited companies and LLPs.
+- Individual subscribers, including sole traders and certain partnerships.
+- Generic business contact details.
+- Personal data relating to identifiable business contacts.
+
+Add fields and flags for:
+
+- `uk_business_type`
+- `uk_subscriber_type`
+- `personal_data_present`
+- `lawful_basis_review_required`
+- `email_marketing_review_required`
+- `live_call_screening_required`
+- `ctps_check_status`
+- `tps_check_status`
+- `do_not_contact`
+- `opt_out_status`
+- `compliance_notes`
+
+Do not treat every UK business as a corporate subscriber.
+
+Do not assume that a publicly visible email address automatically gives permission to send marketing.
+
+Where applicable, flag that marketing to sole traders and certain partnerships may require consent or a valid soft opt-in under PECR.
+
+For UK business marketing calls, build a reminder/check field for applicable CTPS/TPS screening and suppression requirements.
+
+Record objections and opt-outs and ensure they are respected.
+
+## USA — United States
+
+The USA workflow must include compliance-awareness fields for commercial email and telephone outreach.
+
+Add:
+
+- `us_business_state`
+- `us_business_entity_type`
+- `personal_data_present`
+- `can_spam_review_required`
+- `dnc_screening_required`
+- `tcpa_review_required`
+- `call_permission_status`
+- `sms_permission_status`
+- `do_not_contact`
+- `opt_out_status`
+- `compliance_notes`
+
+For commercial email, provide reminders for CAN-SPAM requirements, including:
+
+- Accurate sender and header information.
+- Non-deceptive subject lines.
+- Required commercial-message disclosures.
+- A valid physical postal address.
+- A clear opt-out mechanism.
+- Prompt handling of opt-out requests.
+
+For automated marketing calls and texts, do not assume a public business phone number is consent. Flag the need to review applicable TCPA/FCC requirements and relevant state rules before use.
+
+Do not assume all state laws are identical.
+
+## Global outreach safety
+
+- Do not automatically send email, SMS, WhatsApp messages, or calls.
+- Lead generation and contact discovery must be separate from outreach execution.
+- Do not enable bulk messaging without a separate, explicit, compliant outreach module.
+- Maintain a suppression/do-not-contact list.
+- Prevent opted-out records from being reintroduced as contactable leads.
+- Store the source and date of consent where consent is relied upon.
+- Make compliance status visible before any future outreach integration.
+- When legal classification is uncertain, show `manual_review_required` rather than guessing.
+
+---
+
+# 12. DUPLICATE DETECTION AND DATA QUALITY
+
+Implement strong duplicate detection without merging unrelated businesses.
+
+Use multiple signals:
+
+- Normalized official website domain
+- Business registration number, where available
+- Normalized business name
+- Address
+- Phone number
+- Country and location
+- Provider business ID, where available
+
+Rules:
+
+- Remove genuine duplicate records within the same market.
+- Preserve separate branches when they are genuinely separate business locations.
+- Do not merge unrelated businesses simply because they share a name.
+- Where a multinational company operates in both UK and USA, preserve country-specific locations as separate lead records and optionally link them to a parent organisation.
+- Check previous runs and previously contacted/suppressed leads.
+- Keep historical run information.
+- Show why a record was marked as a duplicate.
+- Make duplicate rules auditable.
+
+Use market-aware deduplication. A UK branch must not accidentally overwrite a legitimate USA branch.
+
+---
+
+# 13. DATABASE AND PERSISTENCE
+
+Use the existing database and persistence system.
+
+If the current application uses Firebase/Firestore, preserve it and extend its current schema safely.
+
+Do not:
+
+- Delete existing collections.
+- Reset the database.
+- Replace working production data with sample data.
+- Change existing document IDs without a migration plan.
+- Store API keys in frontend code.
+- Create duplicate records every time a user refreshes or reruns a search.
+
+Add appropriate market-aware data structures for:
+
+- Leads
+- Generation runs
+- Research evidence
+- Source records
+- Score breakdowns
+- Contact verification
+- Suppression records
+- Opt-out records
+- Provider status
+- Audit events
+
+Every lead must preserve its original source and research history.
+
+Add safe migrations or backward-compatible defaults for existing Pakistan records.
+
+---
+
+# 14. USER INTERFACE AND WORKFLOW
+
+Build a clean, professional, responsive SaaS interface.
+
+## Lead generation form
+
+Provide these controls:
+
+1. Country/market selector.
+2. Location or locations.
+3. Business niche.
+4. Optional sub-niche.
+5. Target number of leads per market.
+6. Minimum lead score.
+7. Website status filter.
+8. Contact-information filter.
+9. Optional growth-signal filter.
+10. Start generation button.
+
+The interface should make it obvious which country is currently selected.
+
+When `UK + USA` is selected, make the per-country lead target clear.
+
+## Results dashboard
+
+Show separate market summaries:
+
+- Pakistan leads
+- UK leads
+- USA leads
+
+For each run show:
+
+- Businesses discovered
+- Businesses researched
+- Qualified leads
+- Grade A leads
+- Grade B leads
+- Grade C leads
+- Leads excluded
+- Duplicates removed
+- Missing contact information
+- Provider errors or incomplete research
+
+Never display fabricated progress or fake success counts.
+
+## Lead table
+
+Include columns such as:
+
+- Business name
+- Country
+- Location
+- Industry
+- Website
+- Website status
+- Public email
+- Email status
+- Phone
+- Lead score
+- Lead grade
+- Opportunity reason
+- Research date
+- Source evidence
+- Verification status
+
+Allow the user to:
+
+- Search
+- Sort
+- Filter
+- Open lead details
+- View source evidence
+- View score breakdown
+- Exclude a lead
+- Mark as reviewed
+- Mark as contacted
+- Add notes
+- Add to suppression list
+
+## Lead detail page
+
+Display:
+
+- Business identity
+- Country-specific location
+- Website audit findings
+- Why this lead was qualified
+- Score breakdown
+- Public contact details
+- Exact source links
+- Evidence dates
+- Verification confidence
+- Compliance warnings
+- Manual-review flags
+- Research limitations
+
+Do not hide uncertainty.
+
+---
+
+# 15. EXPORTS
+
+Preserve existing export features and add market-aware exports.
+
+Support:
+
+- Excel `.xlsx`
+- CSV
+
+Export options:
+
+- Selected leads
+- Filtered leads
+- All qualified leads
+- UK only
+- USA only
+- Pakistan only
+- UK + USA combined, with clear country columns
+
+Include source and verification fields in exports.
+
+Suggested columns:
+
+- Company Name
+- Country
+- Business Type
+- Industry
+- Address
+- City
+- Region/State
+- Postcode/ZIP
+- Website
+- Website Status
+- Public Business Email
+- Email Source
+- Email Verification Status
+- Public Phone
+- Phone Normalized
+- Lead Score
+- Lead Grade
+- Opportunity Reason
+- Website Issues
+- Growth Evidence
+- Contact Source
+- Source URLs
+- Research Date
+- Compliance Review Status
+- Notes
+
+Do not include guessed email addresses or invented contact data in any export.
+
+Do not lose leading zeroes in Pakistan phone numbers or ZIP/postcode values. Export phone numbers and postal codes as text where necessary.
+
+---
+
+# 16. RELIABILITY, SECURITY, AND PERFORMANCE
+
+Implement:
+
+- Server-side API-key handling.
+- Input validation.
+- Authentication and authorization consistent with the existing app.
+- Rate limiting.
+- Provider-specific throttling.
+- Pagination.
+- Retry and timeout handling.
+- Clear error states.
+- Logging without exposing secrets or unnecessary personal data.
+- Safe database writes.
+- Protection against duplicate generation jobs.
+- Cancellation or safe stopping of long-running jobs, where the architecture supports it.
+- Visible progress based on actual completed work.
+
+Never put private API keys or service credentials into browser code, exported files, or logs.
+
+Do not invent API keys or assume paid providers are available.
+
+Where credentials are missing, show exactly which provider is unavailable and what configuration is needed.
+
+---
+
+# 17. TESTING — DO NOT SKIP
+
+Create and run appropriate unit, integration, and end-to-end tests using the existing testing framework.
+
+At minimum, test the following:
+
+## Pakistan regression tests
+
+- Pakistan remains selectable.
+- Pakistan remains the default if that is the current behaviour.
+- Existing Pakistan discovery workflow still runs.
+- Pakistan locations are handled correctly.
+- Pakistani phone numbers retain existing formatting and leading-zero behaviour.
+- Existing Pakistan records still load.
+- Pakistan exports still work.
+- UK and USA results do not appear in Pakistan-only results.
+
+## UK tests
+
+- UK selection triggers UK-only discovery.
+- England, Scotland, Wales, and Northern Ireland can be selected.
+- Custom UK locations work.
+- UK phone numbers normalize correctly to `+44` when valid.
+- UK business-type and subscriber-type fields are handled.
+- UK compliance warnings appear when required.
+- UK results export with correct country and location information.
+
+## USA tests
+
+- USA selection triggers USA-only discovery.
+- States, DC, cities, and custom locations work.
+- US phone numbers normalize correctly to `+1` when valid.
+- ZIP codes preserve leading zeroes.
+- CAN-SPAM and relevant call/text review flags appear.
+- USA results export with correct country and state information.
+
+## Combined-market tests
+
+- UK + USA runs both markets independently.
+- UK results are not mislabeled as USA.
+- USA results are not mislabeled as UK.
+- Separate per-market counts and progress are correct.
+- If one provider/market fails, successful results from the other market are preserved.
+- The combined export includes accurate market labels.
+
+## Data-quality tests
+
+- No generated or guessed email addresses.
+- No fabricated business records.
+- No unsupported website-failure claims.
+- Every important qualification reason has evidence or a clear uncertainty label.
+- Duplicate detection works without merging separate branches.
+- Suppressed and opted-out leads remain suppressed.
+- Empty or partial provider results are handled correctly.
+- Missing credentials produce honest provider errors.
+- Export data matches the displayed lead records.
+
+Do not claim a test passed unless it was actually executed and passed.
+
+---
+
+# 18. ACCEPTANCE CRITERIA — DEFINITION OF DONE
+
+The task is complete only when:
+
+1. The existing application has been inspected.
+2. UK lead generation is implemented.
+3. USA lead generation is implemented.
+4. Pakistan functionality remains intact.
+5. The country selector correctly controls the full pipeline.
+6. UK + USA combined generation works without mixing markets.
+7. Location and niche selection work.
+8. Research evidence is retained for every qualified lead.
+9. Scoring is transparent and evidence-based.
+10. Emails and phone numbers are not fabricated.
+11. Duplicate detection works.
+12. Database records persist safely.
+13. Exports work.
+14. Compliance-review flags work.
+15. Pakistan regression tests pass.
+16. UK and USA tests pass, or any blocked tests are clearly identified.
+17. Missing API credentials and unavailable providers are disclosed honestly.
+18. No destructive database reset or removal of existing features has occurred.
+
+### Important: lead quantity must never override lead quality
+
+If the user requests 100 leads but only 37 businesses meet the selected requirements and available evidence, return the 37 qualifying businesses and explain the shortfall.
+
+Never fill a requested quota with fake businesses, guessed emails, duplicate records, or weak unverified results.
+
+---
+
+# 19. FINAL IMPLEMENTATION REPORT
+
+After making the changes, provide a clear report with these sections:
+
+1. **Existing architecture discovered** — what the project was actually using.
+2. **Files changed** — exact file names and what changed in each.
+3. **UK implementation** — what is working.
+4. **USA implementation** — what is working.
+5. **Pakistan preservation** — what was checked to ensure no regression.
+6. **Combined UK + USA workflow** — what was tested.
+7. **Data providers** — which integrations are genuinely configured and working.
+8. **Credentials still required** — exact environment-variable names, but never reveal secret values.
+9. **Testing results** — tests actually run, passed, failed, or blocked.
+10. **Known limitations** — anything not fully implemented or not verified.
+11. **How to use the upgraded application** — simple step-by-step user instructions.
+
+Clearly distinguish between:
+
+- Implemented and tested
+- Implemented but not tested
+- Partially implemented
+- Blocked by missing API credentials
+- Not implemented
+
+Do not say "100% complete" merely because code was generated.
+
+---
+
+# 20. FINAL EXECUTION INSTRUCTION
+
+Start by inspecting the existing LeadPulse AI project.
+
+Then make the required changes directly in the existing application, keeping the Pakistan workflow safe and backward-compatible.
+
+Implement UK and USA as fully separate, country-aware markets, with an optional combined UK + USA mode.
+
+Use real configured data providers, real public evidence, strict duplicate control, transparent scoring, reliable exports, and honest verification statuses.
+
+Do not fabricate results. Do not invent credentials. Do not delete working features. Do not stop at a plan.
+
+**Build the best reliable version that the existing project and its genuinely configured providers can support, run the tests, fix the problems discovered, and provide the truthful final implementation report.**
